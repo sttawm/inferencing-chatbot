@@ -1,21 +1,21 @@
 import { openai } from "@ai-sdk/openai";
-import { streamText, convertToModelMessages, type UIMessage } from "ai";
+import { frontendTools } from "@assistant-ui/react-ai-sdk";
+import { convertToModelMessages, streamText } from "ai";
+
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  const { messages, system, tools } = await req.json();
 
   const result = streamText({
-    model: openai.responses("gpt-5-nano"),
+    model: openai("gpt-4o"),
     messages: convertToModelMessages(messages),
-    providerOptions: {
-      openai: {
-        reasoningEffort: "low",
-        reasoningSummary: "auto",
-      },
+    // forward system prompt and tools from the frontend
+    system,
+    tools: {
+      ...frontendTools(tools),
     },
   });
 
-  return result.toUIMessageStreamResponse({
-    sendReasoning: true,
-  });
+  return result.toUIMessageStreamResponse();
 }
