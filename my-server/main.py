@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List, Literal
 
@@ -6,7 +7,12 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 import vertexai
-from vertexai.generative_models import GenerativeModel, GenerationConfig, Part, Content
+from vertexai.generative_models import (
+    Content,
+    GenerationConfig,
+    GenerativeModel,
+    Part,
+)
 
 # --------- Load env & init Vertex ---------
 load_dotenv()
@@ -15,6 +21,9 @@ PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
 LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 vertexai.init(project=PROJECT_ID, location=LOCATION)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("gemini-fastapi")
 
 app = FastAPI(title="Gemini Pass-Through API (Vertex)")
 
@@ -86,5 +95,14 @@ async def chat(body: ChatRequest):
     body.messages: [{role, content}]
     body.model: e.g. "gemini-1.5-flash", "gemini-1.5-pro"
     """
+    payload = body.model_dump()
+    logger.info(
+        "Received chat request: model=%s messages=%s",
+        payload.get("model"),
+        len(payload.get("messages", [])),
+    )
+    logger.debug("Full payload: %s", payload)
+
     reply = call_gemini(body)
+    logger.info("Sending Gemini reply (%s chars)", len(reply))
     return ChatResponse(reply=reply)
