@@ -56,13 +56,12 @@ export function MyRuntimeProvider({
     () =>
       new AssistantChatTransport({
         api: "/api/chat",
-        prepareSendMessagesRequest: async (options) => ({
-          ...options,
-          body: {
+        prepareSendMessagesRequest: async (options) => {
+          options.body = {
             ...(options.body ?? {}),
             model: modelRef.current,
-          },
-        }),
+          };
+        },
       }),
     [],
   );

@@ -1,9 +1,10 @@
+import json
 import logging
 import os
-from typing import List, Literal
+from typing import Any, Dict, List, Literal
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 import vertexai
@@ -44,6 +45,26 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+
+
+# --------- Helpers ---------
+
+def to_chat_request(payload: Dict[str, Any]) -> ChatRequest:
+    """
+    Convert the arbitrary payload coming from Next.js into our ChatRequest.
+    Missing fields are filled with defaults.
+    """
+    try:
+        messages = [Message(**m) for m in payload.get("messages", [])]
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid messages: {exc}")
+
+    return ChatRequest(
+        messages=messages,
+        model=payload.get("model", "gemini-2.5-pro"),
+        temperature=payload.get("temperature", 0.3),
+        max_output_tokens=payload.get("max_output_tokens", 1024),
+    )
 
 
 # --------- Core Gemini call ---------
@@ -88,21 +109,26 @@ def call_gemini(req: ChatRequest) -> str:
 # --------- FastAPI route ---------
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(body: ChatRequest):
+async def chat(request: Request):
     """
     Pass-through chat endpoint.
 
     body.messages: [{role, content}]
     body.model: e.g. "gemini-1.5-flash", "gemini-1.5-pro"
     """
-    payload = body.model_dump()
+    payload = await request.json()
     logger.info(
-        "Received chat request: model=%s messages=%s",
-        payload.get("model"),
-        len(payload.get("messages", [])),
+        "Incoming request: %s",
+        json.dumps(payload, indent=2, ensure_ascii=False),
     )
-    logger.debug("Full payload: %s", payload)
 
-    reply = call_gemini(body)
+    chat_request = to_chat_request(payload)
+    logger.info(
+        "Normalized request -> model=%s messages=%s",
+        chat_request.model,
+        len(chat_request.messages),
+    )
+
+    reply = call_gemini(chat_request)
     logger.info("Sending Gemini reply (%s chars)", len(reply))
     return ChatResponse(reply=reply)
