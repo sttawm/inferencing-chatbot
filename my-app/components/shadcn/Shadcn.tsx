@@ -98,7 +98,7 @@ const Header: FC = () => {
 export const Shadcn = () => {
   const sideStyle = "bg-muted/40 px-3 py-2";
   const topStyle = "border-b";
-  const leftStyle = "border-r hidden md:block";
+  const leftStyle = "border-r hidden md:flex md:flex-col";
 
   return (
     <div className="grid h-full w-full grid-flow-col grid-rows-[auto_1fr] [--primary-foreground:0_0%_98%] [--primary:0_0%_9%] md:grid-cols-[250px_1fr] dark:[--primary-foreground:0_0%_9%] dark:[--primary:0_0%_98%]">
