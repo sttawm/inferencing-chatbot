@@ -1,14 +1,8 @@
 "use client";
-import {} from "@radix-ui/react-select";
 import Image from "next/image";
 import type { FC } from "react";
-import anthropic from "../../assets/providers/anthropic.svg";
-import fireworks from "../../assets/providers/fireworks.svg";
-import google from "../../assets/providers/google.svg";
-import deepseek from "../../assets/providers/deepseek.svg";
-import meta from "../../assets/providers/meta.svg";
-import mistral from "../../assets/providers/mistral.svg";
 import openai from "../../assets/providers/openai.svg";
+import google from "../../assets/providers/google.svg";
 import {
   Select,
   SelectContent,
@@ -19,46 +13,32 @@ import {
 
 const models = [
   {
-    name: "GPT 4o-mini",
+    name: "GPT-4o",
+    value: "gpt-4o",
+    icon: openai,
+  },
+  {
+    name: "GPT-4o mini",
     value: "gpt-4o-mini",
     icon: openai,
   },
   {
-    name: "Deepseek R1",
-    value: "deepseek-r1",
-    icon: deepseek,
-  },
-  {
-    name: "Claude 3.5 Sonnet",
-    value: "claude-3.5-sonnet",
-    icon: anthropic,
-  },
-  {
-    name: "Gemini 2.0 Flash",
-    value: "gemini-2.0-flash",
+    name: "My FastAPI Gemini",
+    value: "my-fastapi",
     icon: google,
   },
-  {
-    name: "Llama 3 8b",
-    value: "llama-3-8b",
-    icon: meta,
-  },
-  {
-    name: "Firefunction V2",
-    value: "firefunction-v2",
-    icon: fireworks,
-  },
-  {
-    name: "Mistral 7b",
-    value: "mistral-7b",
-    icon: mistral,
-  },
 ];
-export const ModelPicker: FC = () => {
+
+type ModelPickerProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+export const ModelPicker: FC<ModelPickerProps> = ({ value, onChange }) => {
   return (
-    <Select defaultValue={models[0]?.value ?? ""}>
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="max-w-[300px]">
-        <SelectValue />
+        <SelectValue placeholder="Select model" />
       </SelectTrigger>
       <SelectContent className="">
         {models.map((model) => (

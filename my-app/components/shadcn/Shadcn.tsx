@@ -5,6 +5,7 @@ import type { TooltipContentProps } from "@radix-ui/react-tooltip";
 import Image from "next/image";
 import { ComponentPropsWithRef, type FC } from "react";
 
+import { useModelSelection } from "@/app/MyRuntimeProvider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import icon from "@/public/favicon/icon.svg";
@@ -75,10 +76,12 @@ const LeftBarSheet: FC = () => {
 };
 
 const Header: FC = () => {
+  const { model, setModel } = useModelSelection();
+
   return (
     <header className="flex gap-2">
       <LeftBarSheet />
-      <ModelPicker />
+      <ModelPicker value={model} onChange={setModel} />
       <ButtonWithTooltip
         variant="outline"
         size="icon"
