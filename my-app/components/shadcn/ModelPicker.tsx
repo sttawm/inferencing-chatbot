@@ -24,7 +24,7 @@ const models = [
   },
   {
     name: "My FastAPI Gemini",
-    value: "my-fastapi",
+    value: "gemini-2.5-pro",
     icon: google,
   },
 ];

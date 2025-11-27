@@ -1,8 +1,12 @@
 import { openai } from "@ai-sdk/openai";
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
-import { convertToModelMessages, streamText } from "ai";
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+} from "ai";
 
-const FASTAPI_MODEL = "my-fastapi";
+const FASTAPI_MODEL = "gemini-2.5-pro";
 const FASTAPI_URL =
   process.env["FASTAPI_CHAT_URL"] ?? "http://localhost:8000/chat";
 
@@ -21,7 +25,7 @@ export async function POST(req: Request) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ messages, system, tools}),
+        body: JSON.stringify({ messages, tools, model }),
       });
 
       if (!response.ok) {
@@ -33,7 +37,30 @@ export async function POST(req: Request) {
         );
       }
 
-      return response;
+      const data = await response.json();
+      const text =
+        typeof data?.reply === "string"
+          ? data.reply
+          : "FastAPI response missing reply field.";
+
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue({ type: "start" });
+          controller.enqueue({ type: "start-step" });
+          controller.enqueue({ type: "text-start", id: "text-1" });
+          controller.enqueue({
+            type: "text-delta",
+            id: "text-1",
+            delta: text,
+          });
+          controller.enqueue({ type: "text-end", id: "text-1" });
+          controller.enqueue({ type: "finish-step" });
+          controller.enqueue({ type: "finish" });
+          controller.close();
+        },
+      });
+
+      return createUIMessageStreamResponse({ stream });
     } catch (error) {
       console.error(error);
       return new Response(

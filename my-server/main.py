@@ -1,9 +1,11 @@
+import json
 import logging
 import os
 from typing import Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import vertexai
@@ -91,6 +93,7 @@ def call_gemini(req: ChatRequest) -> str:
             generation_config=gen_config,
         )
     except Exception as e:
+        logger.exception("Gemini call failed")
         raise HTTPException(status_code=500, detail=str(e))
 
     text = (response.text or "").strip()
@@ -116,7 +119,17 @@ async def chat(body: ChatRequest):
         len(body.messages),
         len(body.tools),
     )
+    logger.info("Full request payload:\n%s", body.model_dump_json(indent=2))
 
     reply = call_gemini(body)
     logger.info("Sending Gemini reply (%s chars)", len(reply))
     return ChatResponse(reply=reply)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception for %s %s", request.method, request.url)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
