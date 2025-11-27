@@ -1,11 +1,10 @@
-import json
 import logging
 import os
-from typing import Any, Dict, List, Literal
+from typing import Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
 import vertexai
 from vertexai.generative_models import (
@@ -31,13 +30,21 @@ app = FastAPI(title="Gemini Pass-Through API (Vertex)")
 
 # --------- Pydantic models ---------
 
+class MessagePart(BaseModel):
+    type: str
+    text: Optional[str] = None
+    data: Optional[Dict[str, str]] = None
+
+
 class Message(BaseModel):
     role: Literal["user", "assistant", "system"]
-    content: str
+    parts: List[MessagePart]
+    id: Optional[str] = None
 
 
 class ChatRequest(BaseModel):
     messages: List[Message]
+    tools: Dict[str, Dict] = Field(default_factory=dict)
     model: str = "gemini-2.5-pro"
     temperature: float = 0.3
     max_output_tokens: int = 1024
@@ -47,26 +54,6 @@ class ChatResponse(BaseModel):
     reply: str
 
 
-# --------- Helpers ---------
-
-def to_chat_request(payload: Dict[str, Any]) -> ChatRequest:
-    """
-    Convert the arbitrary payload coming from Next.js into our ChatRequest.
-    Missing fields are filled with defaults.
-    """
-    try:
-        messages = [Message(**m) for m in payload.get("messages", [])]
-    except Exception as exc:
-        raise HTTPException(status_code=422, detail=f"Invalid messages: {exc}")
-
-    return ChatRequest(
-        messages=messages,
-        model=payload.get("model", "gemini-2.5-pro"),
-        temperature=payload.get("temperature", 0.3),
-        max_output_tokens=payload.get("max_output_tokens", 1024),
-    )
-
-
 # --------- Core Gemini call ---------
 
 def call_gemini(req: ChatRequest) -> str:
@@ -74,15 +61,22 @@ def call_gemini(req: ChatRequest) -> str:
 
     # Convert messages to Vertex contents
     contents: list[Content] = []
-    for m in req.messages:
+    for message in req.messages:
         # Vertex uses "user" / "model" roles
-        role = "user" if m.role in ("user", "system") else "model"
-        if not m.content.strip():
+        role = "user" if message.role in ("user", "system") else "model"
+        text_chunks: List[str] = []
+        for part in message.parts:
+            if part.type == "text" and part.text:
+                text_chunks.append(part.text)
+            elif part.text:
+                text_chunks.append(part.text)
+        if not text_chunks:
             continue
+
         contents.append(
             Content(
                 role=role,
-                parts=[Part.from_text(m.content)],
+                parts=[Part.from_text("\n".join(text_chunks))],
             )
         )
 
@@ -109,26 +103,20 @@ def call_gemini(req: ChatRequest) -> str:
 # --------- FastAPI route ---------
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: Request):
+async def chat(body: ChatRequest):
     """
     Pass-through chat endpoint.
 
     body.messages: [{role, content}]
     body.model: e.g. "gemini-1.5-flash", "gemini-1.5-pro"
     """
-    payload = await request.json()
     logger.info(
-        "Incoming request: %s",
-        json.dumps(payload, indent=2, ensure_ascii=False),
+        "Incoming request -> model=%s messages=%s tools=%s",
+        body.model,
+        len(body.messages),
+        len(body.tools),
     )
 
-    chat_request = to_chat_request(payload)
-    logger.info(
-        "Normalized request -> model=%s messages=%s",
-        chat_request.model,
-        len(chat_request.messages),
-    )
-
-    reply = call_gemini(chat_request)
+    reply = call_gemini(body)
     logger.info("Sending Gemini reply (%s chars)", len(reply))
     return ChatResponse(reply=reply)
