@@ -13,6 +13,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -44,17 +45,31 @@ export function MyRuntimeProvider({
   children: React.ReactNode;
 }>) {
   const [model, setModelRaw] = useState(DEFAULT_MODEL);
+  const modelRef = useRef(model);
+  modelRef.current = model;
 
   const setModel = useCallback((next: string) => {
     setModelRaw(next || DEFAULT_MODEL);
   }, []);
 
+  const transport = useMemo(
+    () =>
+      new AssistantChatTransport({
+        api: "/api/chat",
+        prepareSendMessagesRequest: async (options) => ({
+          ...options,
+          body: {
+            ...(options.body ?? {}),
+            model: modelRef.current,
+          },
+        }),
+      }),
+    [],
+  );
+
   const runtime = useChatRuntime({
     cloud,
-    transport: new AssistantChatTransport({
-      api: "/api/chat",
-    }),
-    body: { model },
+    transport,
   });
 
   const contextValue = useMemo(
