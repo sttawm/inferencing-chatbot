@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import type { FC } from "react";
-import openai from "../../assets/providers/openai.svg";
 import google from "../../assets/providers/google.svg";
 import {
   Select,
@@ -13,18 +12,13 @@ import {
 
 const models = [
   {
-    name: "GPT-4o",
-    value: "gpt-4o",
-    icon: openai,
+    name: "Gemini-2.5-Pro (Baseline)",
+    value: "Gemini-2.5-Pro (Baseline)",
+    icon: google,
   },
   {
-    name: "GPT-4o mini",
-    value: "gpt-4o-mini",
-    icon: openai,
-  },
-  {
-    name: "My FastAPI Gemini",
-    value: "gemini-2.5-pro",
+    name: "Gemini-2.5-Pro + BN",
+    value: "Gemini-2.5-Pro + BN",
     icon: google,
   },
 ];

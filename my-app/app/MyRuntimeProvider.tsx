@@ -22,7 +22,7 @@ const cloud = new AssistantCloud({
   anonymous: true,
 });
 
-export const DEFAULT_MODEL = "gpt-4o";
+export const DEFAULT_MODEL = "Gemini-2.5-Pro (Baseline)";
 
 type ModelContextValue = {
   model: string;

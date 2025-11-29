@@ -1,0 +1,6 @@
+numpy>=1.26,<2
+fastapi==0.115.6
+uvicorn[standard]==0.32.0
+python-dotenv==1.0.1
+google-cloud-aiplatform==1.66.0
+pgmpy==0.1.24
