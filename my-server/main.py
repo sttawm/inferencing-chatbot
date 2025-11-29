@@ -27,7 +27,7 @@ vertexai.init(project=PROJECT_ID, location=LOCATION)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("gemini-fastapi")
 
-app = FastAPI(title="Gemini Pass-Through API (Vertex)")
+app = FastAPI(title="My-Server")
 
 
 # --------- Pydantic models ---------
@@ -49,7 +49,7 @@ class ChatRequest(BaseModel):
     tools: Dict[str, Dict] = Field(default_factory=dict)
     model: str = "gemini-2.5-pro"
     temperature: float = 0.3
-    max_output_tokens: int = 1024
+    max_output_tokens: int = 2048
 
 
 class ChatResponse(BaseModel):
