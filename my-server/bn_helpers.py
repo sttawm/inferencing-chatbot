@@ -1,5 +1,8 @@
 import networkx as nx
 
+from pgmpy.models import BayesianModel
+from pgmpy.inference import VariableElimination
+
 def reachable_from_evidence(model, evidence_nodes):
     """
     Returns all nodes reachable (in the undirected graph) from any evidence node,
@@ -21,3 +24,16 @@ def reachable_from_evidence(model, evidence_nodes):
     reachable -= evidence_nodes
 
     return sorted(reachable)
+
+
+def validate_bn(model: BayesianModel) -> VariableElimination:
+    # 1) Graph sanity: must be a DAG
+    assert nx.is_directed_acyclic_graph(model), "BN graph is not a DAG"
+
+    # 2) CPD + cardinality + normalization checks
+    assert model.check_model(), "model.check_model() failed"
+
+    # 3) Make sure inference can be constructed
+    ve = VariableElimination(model)
+
+    return ve
