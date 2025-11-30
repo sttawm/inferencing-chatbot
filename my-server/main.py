@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
@@ -22,7 +23,8 @@ from vertexai.generative_models import (
 from prompt import make_prompt
 
 # --------- Load env & init Vertex ---------
-load_dotenv()
+ENV_PATH = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=ENV_PATH, override=False)
 
 PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
 LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -79,7 +81,7 @@ def render_conversation(messages: List[Message]) -> str:
     return "\n".join(lines) if lines else "No prior conversation available."
 
 
-def parse_update_payload(raw_text: str) -> Dict[str, Optional[bool]]:
+def parse_update_payload(raw_text: str) -> Dict[str, Optional[str]]:
     start = raw_text.find("{")
     end = raw_text.rfind("}")
     if start == -1 or end == -1 or end <= start:
@@ -95,29 +97,15 @@ def parse_update_payload(raw_text: str) -> Dict[str, Optional[bool]]:
             status_code=500, detail=f"Unable to parse BN update JSON: {exc}"
         )
 
-    normalized: Dict[str, Optional[bool]] = {}
+    normalized: Dict[str, Optional[str]] = {}
     for key, value in payload.items():
-        if isinstance(value, bool) or value is None:
-            normalized[key] = value
-        elif isinstance(value, str):
-            lowered = value.strip().lower()
-            if lowered in {"true", "t", "1"}:
-                normalized[key] = True
-            elif lowered in {"false", "f", "0"}:
-                normalized[key] = False
-            else:
-                normalized[key] = None
-        else:
+        if value is None:
             normalized[key] = None
+        elif isinstance(value, bool):
+            normalized[key] = "true" if value else "false"
+        else:
+            normalized[key] = str(value).strip()
     return normalized
-
-
-def to_state_value(value: Optional[bool]) -> Optional[str]:
-    if value is True:
-        return "yes"
-    if value is False:
-        return "no"
-    return value if isinstance(value, str) else None
 
 
 # --------- Core Gemini call ---------
@@ -197,6 +185,7 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
     )
 
     response_text = call_gemini(bn_prompt_request)
+    logger.info("BN update request payload: %s", bn_prompt_request.model_dump())
     updates_raw = parse_update_payload(response_text)
     updates = {
         node: value
@@ -207,12 +196,11 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
 
     evidence_map: Dict[str, str] = {}
     for node, value in updates.items():
-        state_value = to_state_value(value)
-        if state_value:
-            evidence_map[node] = state_value
+        if value:
+            evidence_map[node] = value
     reachable_nodes = reachable_from_evidence(BN.model, list(evidence_map.keys()))
 
-    probabilities: Dict[str, float] = {}
+    probabilities: Dict[str, Dict[str, float]] = {}
 
     if reachable_nodes:
         try:
@@ -229,13 +217,10 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
             for node, factor in factors.items():
                 state_names = factor.state_names[node]
                 values = factor.values.tolist()
-                try:
-                    yes_index = state_names.index("yes")
-                    probabilities[node] = float(values[yes_index])
-                except ValueError:
-                    logger.warning(
-                        "Node %s missing 'yes' state in factor %s", node, state_names
-                    )
+                probabilities[node] = {
+                    state: float(prob)
+                    for state, prob in zip(state_names, values)
+                }
         except Exception as exc:
             logger.exception("Failed to query probabilities: %s", exc)
 
@@ -268,7 +253,9 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
         max_output_tokens=body.max_output_tokens,
     )
 
+    logger.info("LLM probability request: %s", analysis_request.model_dump())
     llm_reply = call_gemini(analysis_request)
+    logger.info("LLM response (with probabilities): %s", llm_reply)
 
     summary_lines = [
         "Bayesian network updates:",

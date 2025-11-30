@@ -1,5 +1,8 @@
-from womens_health import BN_VARIABLES_DICT
+import os
 
+import pytest
+
+from main import ChatRequest, Message, MessagePart, handle_bn_enhanced_request
 from womens_health import load_womens_health_bayes_net
 
 
@@ -10,6 +13,29 @@ def test_womens_health_bn_loads():
     assert bn.edges, "Expected edge list to be populated"
     assert bn.inference is not None
 
-def test_to_prompt():
-    user_query = "I have irregular periods and weight gain. What could be the cause?"
-    dsl = to_compact_dsl(BN_VARIABLES_DICT)
+
+@pytest.mark.integration
+def test_bn_enhanced_flow_real_gemini():
+    if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
+        pytest.skip("GOOGLE_CLOUD_PROJECT not set; real Gemini call skipped.")
+
+    body = ChatRequest(
+        messages=[
+            Message(
+                role="user",
+                parts=[
+                    MessagePart(
+                        type="text",
+                        text="I've been experiencing irregular periods and weight gain. What should I check?"
+                    )
+                ],
+            )
+        ],
+        tools={},
+        model="Gemini-2.5-Pro + BN",
+    )
+
+    reply = handle_bn_enhanced_request(body)
+
+    assert "Updated probabilities" in reply
+    assert "Assistant response" in reply
