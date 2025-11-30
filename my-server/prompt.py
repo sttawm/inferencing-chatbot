@@ -37,3 +37,25 @@ Conversation:
 
 Respond ONLY with JSON.
 """.strip()
+
+def make_probability_prompt(
+    conversation: str,
+    updates_text: str,
+    probability_text: str,
+) -> str:
+    """
+    Build the follow-up prompt that combines the conversation,
+    BN updates, and probabilities before asking Gemini to respond.
+    """
+    return (
+        "You are assisting a user based on the following conversation and\n"
+        "probabilistic insights derived from a Bayesian network.\n"
+        "Use your own knowledge and the provided probabilities to craft a helpful response.\n\n"
+        "Conversation:\n"
+        f"{conversation}\n\n"
+        "Node updates:\n"
+        f"{updates_text}\n\n"
+        "Updated probabilities:\n"
+        f"{probability_text}\n\n"
+        "Provide a thoughtful reply."
+    )

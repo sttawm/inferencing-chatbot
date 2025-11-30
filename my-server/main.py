@@ -20,7 +20,7 @@ from vertexai.generative_models import (
     Part,
 )
 
-from prompt import make_prompt
+from prompt import make_prompt, make_probability_prompt
 
 # --------- Load env & init Vertex ---------
 ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -232,12 +232,10 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
         if probabilities
         else "No probabilistic updates calculated."
     )
-    bn_message = (
-        "Probabilistic model insights:\n"
-        f"Node updates:\n{updates_text}\n\n"
-        f"Updated probabilities:\n{probability_text}\n\n"
-        "Please incorporate these insights into your reply while still leveraging your "
-        "broader knowledge."
+    bn_message = make_probability_prompt(
+        conversation=conversation,
+        updates_text=updates_text,
+        probability_text=probability_text,
     )
 
     analysis_messages = list(body.messages)
