@@ -1,4 +1,4 @@
-"""Bayesian network definition and helper functions for the cancer BN."""
+"""Women's health Bayesian network definition (formerly bayes_net)."""
 
 from __future__ import annotations
 
@@ -7,11 +7,16 @@ from dataclasses import dataclass
 from pgmpy.inference import VariableElimination
 from pgmpy.readwrite import BIFReader
 
-BN_CANCER_BIF = """
-network "cancer" { }
+BN_WOMENS_HEALTH = """
+network "womens_health" { }
 
-variable "Metabolic Imbalance" { type discrete [ 2 ] { "false" "true" }; }
-variable "Adrenal Imbalance" { type discrete [ 2 ] { "false" "true" }; }
+variable "Metabolic Imbalance" { 
+    type discrete [ 2 ] { "false" "true" }; 
+}
+
+variable "Adrenal Imbalance" { 
+    type discrete [ 2 ] { "false" "true" }; 
+}
 
 variable "PCOS" { 
     type discrete [ 2 ] { "false" "true" }; 
@@ -52,8 +57,6 @@ variable "Should cut foods that spike blood sugar" {
 variable "Should get a Continual Glucose Monitor" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
-
-
 
 probability ( "Age" ) {
     table 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1;
@@ -152,16 +155,16 @@ probability ( "Facial Hair" | "PCOS" ) {
 
 
 @dataclass(frozen=True)
-class CancerBayesNet:
+class WomensHealthBayesNet:
     model: any
     nodes: list[str]
     edges: list[tuple[str, str]]
     inference: VariableElimination
 
 
-def load_cancer_bayes_net() -> CancerBayesNet:
-    model = BIFReader(string=BN_CANCER_BIF).get_model()
+def load_womens_health_bayes_net() -> WomensHealthBayesNet:
+    model = BIFReader(string=BN_WOMENS_HEALTH).get_model()
     nodes = list(model.nodes())
     edges = list(model.edges())
     inference = VariableElimination(model)
-    return CancerBayesNet(model=model, nodes=nodes, edges=edges, inference=inference)
+    return WomensHealthBayesNet(model=model, nodes=nodes, edges=edges, inference=inference)
