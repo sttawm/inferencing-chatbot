@@ -12,11 +12,11 @@ from bn_helpers import validate_bn
 BN_WOMENS_HEALTH = """
 network "womens_health" { }
 
-variable "Metabolic Imbalance" { 
+variable "Metabolic_Imbalance" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Adrenal Imbalance" { 
+variable "Adrenal_Imbalance" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
@@ -28,35 +28,35 @@ variable "Age" {
     type discrete [ 7 ] { "child" "teen" "20s" "30s" "40s" "50s" ">60" }; 
 }
 
-variable "Irregular Periods" { 
+variable "Irregular_Periods" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Painful Periods" { 
+variable "Painful_Periods" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Weight Gain" { 
+variable "Weight_Gain" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Facial Hair" { 
+variable "Facial_Hair" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Should journal" { 
+variable "Should_journal" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Should get mental health care" { 
+variable "Should_get_mental_health_care" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Should cut foods that spike blood sugar" { 
+variable "Should_cut_foods_that_spike_blood_sugar" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Should get a Continual Glucose Monitor" { 
+variable "Should_get_a_Continual_Glucose_Monitor" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
@@ -64,37 +64,37 @@ probability ( "Age" ) {
     table 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1;
 }
 
-variable "Central Obesity" { 
+variable "Central_Obesity" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Sleep Quality" {
+variable "Sleep_Quality" {
     type discrete [ 2 ] { "good" "poor" };
 }
 
-variable "High Stress" { 
+variable "High_Stress" { 
     type discrete [ 2 ] { "false" "true" }; 
 }
 
-variable "Cortisol Level" {
+variable "Cortisol_Level" {
     type discrete [ 3 ] { "low" "normal" "high" };
 }
 
-variable "Adrenal Androgens" {
+variable "Adrenal_Androgens" {
     type discrete [ 2 ] { "normal" "high" };
 }
 
-variable "Family History of PCOS" {
+variable "Family_History_of_PCOS" {
     type discrete [ 2 ] { "false" "true" };
 }
 
-# Kids / teens: Global estimates put metabolic syndrome at ~2–3% in children and ~4–5% in adolescents overall, higher in overweight/obese youth. 
-# ~ https://link.springer.com/article/10.1186/s13098-020-00601-8
-# 
-# Adults: Large NHANES-based and other national studies show prevalence rising from about 10–20% in people 20–39 to ~30–35% in 40–59 and ~50–55% in ≥60. 
-# ~ https://pmc.ncbi.nlm.nih.gov/articles/PMC7312413/?utm_source=chatgpt.com
+// Kids / teens: Global estimates put metabolic syndrome at ~2–3% in children and ~4–5% in adolescents overall, higher in overweight/obese youth. 
+// ~ https://link.springer.com/article/10.1186/s13098-020-00601-8
+// 
+// Adults: Large NHANES-based and other national studies show prevalence rising from about 10–20% in people 20–39 to ~30–35% in 40–59 and ~50–55% in ≥60. 
+// ~ https://pmc.ncbi.nlm.nih.gov/articles/PMC7312413/?utm_source=chatgpt.com
 
-probability ( "Central Obesity" | "Age" ) {
+probability ( "Central_Obesity" | "Age" ) {
     ( "child" ) 0.95, 0.05;
     ( "teen" ) 0.90, 0.10;
     ( "20s" ) 0.80, 0.20;
@@ -104,7 +104,7 @@ probability ( "Central Obesity" | "Age" ) {
     ( ">60" ) 0.50, 0.50;
 }
 
-probability ( "Metabolic Imbalance" | "Central Obesity" "Age" ) {
+probability ( "Metabolic_Imbalance" | "Central_Obesity" "Age" ) {
 
     // Central Obesity = false
     ( "false" "child" ) 0.985, 0.015;
@@ -125,7 +125,7 @@ probability ( "Metabolic Imbalance" | "Central Obesity" "Age" ) {
     ( "true"  ">60"   ) 0.300, 0.700;
 }
 
-probability ( "PCOS" | "Adrenal Imbalance" "Metabolic Imbalance" "Age" ) {
+probability ( "PCOS" | "Adrenal_Imbalance" "Metabolic_Imbalance" "Age" ) {
     // Age = child
     ( "false" "false" "child" ) 0.99, 0.01;
     ( "false" "true"  "child" ) 0.89, 0.11;
@@ -169,27 +169,27 @@ probability ( "PCOS" | "Adrenal Imbalance" "Metabolic Imbalance" "Age" ) {
     ( "true"  "true"  ">60" ) 0.79, 0.21;
 }
 
-probability ( "Irregular Periods" | "PCOS" ) {
+probability ( "Irregular_Periods" | "PCOS" ) {
     ( "false" ) 0.80, 0.20;  // no PCOS
     ( "true"  ) 0.15, 0.85;  // PCOS
 }
 
-probability ( "Painful Periods" | "PCOS" ) {
+probability ( "Painful_Periods" | "PCOS" ) {
     ( "false" ) 0.30, 0.70;  // no PCOS
     ( "true"  ) 0.20, 0.80;  // PCOS
 }
 
-probability ( "Weight Gain" | "PCOS" ) {
+probability ( "Weight_Gain" | "PCOS" ) {
     ( "false" ) 0.50, 0.50;  // no PCOS
     ( "true"  ) 0.30, 0.70;  // PCOS
 }
 
-probability ( "Facial Hair" | "PCOS" ) {
+probability ( "Facial_Hair" | "PCOS" ) {
     ( "false" ) 0.93, 0.07;  // no PCOS
     ( "true"  ) 0.30, 0.70;  // PCOS
 }
 
-probability ( "Sleep Quality" | "Age" ) {
+probability ( "Sleep_Quality" | "Age" ) {
     ( "child" ) 0.85, 0.15;
     ( "teen"  ) 0.75, 0.25;
     ( "20s"   ) 0.70, 0.30;
@@ -199,23 +199,23 @@ probability ( "Sleep Quality" | "Age" ) {
     ( ">60"   ) 0.50, 0.50;
 }
 
-probability ( "High Stress" | "Sleep Quality" ) {
+probability ( "High_Stress" | "Sleep_Quality" ) {
     ( "good" ) 0.85, 0.15;   // mostly low stress
     ( "poor" ) 0.50, 0.50;   // poor sleep → high stress more likely
 }
 
-probability ( "Cortisol Level" | "High Stress" ) {
+probability ( "Cortisol_Level" | "High_Stress" ) {
     ( "false" ) 0.10, 0.80, 0.10;  // low, normal, high
     ( "true"  ) 0.05, 0.55, 0.40;  // stress shifts mass toward high cortisol
 }
 
-probability ( "Adrenal Androgens" | "Cortisol Level" ) {
+probability ( "Adrenal_Androgens" | "Cortisol_Level" ) {
     ( "low"    ) 0.95, 0.05;  // high androgens rare with low cortisol
     ( "normal" ) 0.90, 0.10;
     ( "high"   ) 0.75, 0.25;  // high cortisol raises chance of high adrenal androgens
 }
 
-probability ( "Adrenal Imbalance" | "Cortisol Level" "Adrenal Androgens" ) {
+probability ( "Adrenal_Imbalance" | "Cortisol_Level" "Adrenal_Androgens" ) {
 
     // Cortisol = low
     ( "low"    "normal" ) 0.9995, 0.0005;
@@ -230,27 +230,27 @@ probability ( "Adrenal Imbalance" | "Cortisol Level" "Adrenal Androgens" ) {
     ( "high"   "high"   ) 0.9500, 0.0500;
 }
 
-probability ( "Family History of PCOS" | "PCOS" ) {
+probability ( "Family_History_of_PCOS" | "PCOS" ) {
     ( "false" ) 0.90, 0.10;  // no PCOS → ~10% report positive family history
     ( "true"  ) 0.70, 0.30;  // PCOS   → ~30% family history
 }
 
-probability ( "Should journal" | "High Stress" ) {
+probability ( "Should_journal" | "High_Stress" ) {
     ( "false" ) 0.80, 0.20;
     ( "true"  ) 0.30, 0.70;
 }
 
-probability ( "Should get mental health care" | "High Stress" ) {
+probability ( "Should_get_mental_health_care" | "High_Stress" ) {
     ( "false" ) 0.95, 0.05;
     ( "true"  ) 0.40, 0.60;
 }
 
-probability ( "Should cut foods that spike blood sugar" | "Metabolic Imbalance" ) {
+probability ( "Should_cut_foods_that_spike_blood_sugar" | "Metabolic_Imbalance" ) {
     ( "false" ) 0.70, 0.30;
     ( "true"  ) 0.20, 0.80;
 }
 
-probability ( "Should get a Continual Glucose Monitor" | "Metabolic Imbalance" ) {
+probability ( "Should_get_a_Continual_Glucose_Monitor" | "Metabolic_Imbalance" ) {
     ( "false" ) 0.95, 0.05;
     ( "true"  ) 0.60, 0.40;
 }
