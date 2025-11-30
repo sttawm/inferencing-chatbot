@@ -1,0 +1,39 @@
+from womens_health import BN_VARIABLES_DICT
+
+def to_compact_dsl(var_dict: dict[str, list[str]]) -> str:
+    """
+    Convert BN variable definitions into a compact DSL:
+
+    Metabolic_Imbalance ∈ {"false", "true"}
+    Age ∈ {"child", "teen", "20s", ...}
+    """
+    lines = []
+    for var, values in var_dict.items():
+        val_list = ", ".join(f'"{v}"' for v in values)
+        lines.append(f"{var} ∈ {{{val_list}}}")
+    return "\n".join(lines)
+
+def make_prompt(conversation: str) -> str:
+    """
+    Build an LLM prompt instructing the model to infer BN variable values
+    from a conversation, using only the allowed categorical values.
+    """
+    dsl = to_compact_dsl(BN_VARIABLES_DICT)
+    return f"""
+You are analyzing a Bayesian network with the following variables and allowed values:
+
+{dsl}
+
+You must choose exactly ONE allowed value for any variable you decide to return.
+If a variable cannot be inferred from the conversation, set its value to null.
+
+Your response must be a valid JSON object:
+- keys = variable names
+- values = one of the allowed values, or null
+- no extra text, no explanations
+
+Conversation:
+{conversation}
+
+Respond ONLY with JSON.
+""".strip()

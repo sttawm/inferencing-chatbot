@@ -19,6 +19,8 @@ from vertexai.generative_models import (
     Part,
 )
 
+from prompt import make_prompt
+
 # --------- Load env & init Vertex ---------
 load_dotenv()
 
@@ -186,15 +188,7 @@ async def chat(body: ChatRequest):
 def handle_bn_enhanced_request(body: ChatRequest) -> str:
     conversation = render_conversation(body.messages)
 
-    prompt = f"""
-You are analyzing a Bayesian network with the following variables: {', '.join(BN.nodes)}
-
-Conversation transcript:
-{conversation}
-
-Based on the conversation, determine the current boolean state for each variable.
-Respond ONLY with a JSON object where keys are variable names and values are true, false, or null (if unknown).
-""".strip()
+    prompt = make_prompt(conversation)
 
     bn_prompt_request = ChatRequest(
         messages=[Message(role="user", parts=[MessagePart(type="text", text=prompt)])],

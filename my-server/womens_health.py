@@ -9,90 +9,56 @@ from pgmpy.readwrite import BIFReader
 
 from bn_helpers import validate_bn
 
-BN_WOMENS_HEALTH = """
-network "womens_health" { }
-
-variable "Metabolic_Imbalance" { 
-    type discrete [ 2 ] { "false" "true" }; 
+BN_VARIABLES_DICT: dict[str, list[str]] = {
+    "Metabolic_Imbalance": ["false", "true"],
+    "Adrenal_Imbalance": ["false", "true"],
+    "PCOS": ["false", "true"],
+    "Age": ["child", "teen", "20s", "30s", "40s", "50s", ">60"],
+    "Irregular_Periods": ["false", "true"],
+    "Painful_Periods": ["false", "true"],
+    "Weight_Gain": ["false", "true"],
+    "Facial_Hair": ["false", "true"],
+    "Should_journal": ["false", "true"],
+    "Should_get_mental_health_care": ["false", "true"],
+    "Should_cut_foods_that_spike_blood_sugar": ["false", "true"],
+    "Should_get_a_Continual_Glucose_Monitor": ["false", "true"],
+    "Central_Obesity": ["false", "true"],
+    "Sleep_Quality": ["good", "poor"],
+    "High_Stress": ["false", "true"],
+    "Cortisol_Level": ["low", "normal", "high"],
+    "Adrenal_Androgens": ["normal", "high"],
+    "Family_History_of_PCOS": ["false", "true"],
 }
 
-variable "Adrenal_Imbalance" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
+def dict_to_bif_variables(var_dict: dict[str, list[str]]) -> str:
+    """
+    Convert a {var: [values]} dict into BIF variable blocks.
+    """
+    blocks = []
+    for var, values in var_dict.items():
+        value_str = " ".join(f'"{v}"' for v in values)
+        block = (
+            f'variable "{var}" {{\n'
+            f'    type discrete [ {len(values)} ] {{ {value_str} }};\n'
+            f'}}\n'
+        )
+        blocks.append(block)
+    return "\n".join(blocks)
 
-variable "PCOS" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
+BN_VARIABLES = dict_to_bif_variables(BN_VARIABLES_DICT)
 
-variable "Age" { 
-    type discrete [ 7 ] { "child" "teen" "20s" "30s" "40s" "50s" ">60" }; 
-}
-
-variable "Irregular_Periods" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Painful_Periods" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Weight_Gain" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Facial_Hair" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Should_journal" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Should_get_mental_health_care" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Should_cut_foods_that_spike_blood_sugar" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Should_get_a_Continual_Glucose_Monitor" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-probability ( "Age" ) {
-    table 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1;
-}
-
-variable "Central_Obesity" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Sleep_Quality" {
-    type discrete [ 2 ] { "good" "poor" };
-}
-
-variable "High_Stress" { 
-    type discrete [ 2 ] { "false" "true" }; 
-}
-
-variable "Cortisol_Level" {
-    type discrete [ 3 ] { "low" "normal" "high" };
-}
-
-variable "Adrenal_Androgens" {
-    type discrete [ 2 ] { "normal" "high" };
-}
-
-variable "Family_History_of_PCOS" {
-    type discrete [ 2 ] { "false" "true" };
-}
+BN_PROBABILITIES = """
 
 // Kids / teens: Global estimates put metabolic syndrome at ~2–3% in children and ~4–5% in adolescents overall, higher in overweight/obese youth. 
 // ~ https://link.springer.com/article/10.1186/s13098-020-00601-8
 // 
 // Adults: Large NHANES-based and other national studies show prevalence rising from about 10–20% in people 20–39 to ~30–35% in 40–59 and ~50–55% in ≥60. 
 // ~ https://pmc.ncbi.nlm.nih.gov/articles/PMC7312413/?utm_source=chatgpt.com
+
+
+probability ( "Age" ) {
+    table 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1;
+}
 
 probability ( "Central_Obesity" | "Age" ) {
     ( "child" ) 0.95, 0.05;
@@ -255,6 +221,10 @@ probability ( "Should_get_a_Continual_Glucose_Monitor" | "Metabolic_Imbalance" )
     ( "true"  ) 0.60, 0.40;
 }
 """
+
+BN_WOMENS_HEALTH = """
+network "womens_health" { }
+""" + BN_VARIABLES + BN_PROBABILITIES
 
 
 @dataclass(frozen=True)
