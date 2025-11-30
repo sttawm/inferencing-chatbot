@@ -1,14 +1,15 @@
 import json
 import logging
 import os
-from io import StringIO
 from typing import Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from pgmpy.readwrite import BIFReader
+
+from bayes_net import load_cancer_bayes_net
+from bn_helpers import reachable_from_evidence
 
 import vertexai
 from vertexai.generative_models import (
@@ -34,6 +35,8 @@ app = FastAPI(title="Gemini + BN Server")
 BASELINE_MODEL_NAME = "Gemini-2.5-Pro (Baseline)"
 BN_ENHANCED_MODEL_NAME = "Gemini-2.5-Pro + BN"
 VERTEX_MODEL_ID = "gemini-2.5-pro"
+
+BN = load_cancer_bayes_net()
 
 
 # --------- Pydantic models ---------
@@ -62,47 +65,7 @@ class ChatResponse(BaseModel):
     reply: str
 
 
-# --------- Bayesian network setup ---------
-
-BN_CANCER_BIF = """
-network "cancer" { }
-
-variable "Pollution" { type discrete [ 2 ] { "low" "high" }; }
-variable "Smoking" { type discrete [ 2 ] { "true" "false" }; }
-variable "Cancer" { type discrete [ 2 ] { "true" "false" }; }
-variable "Xray" { type discrete [ 2 ] { "positive" "negative" }; }
-variable "Dyspnoea" { type discrete [ 2 ] { "true" "false" }; }
-
-probability ( "Pollution" ) {
-    table 0.9, 0.1;
-}
-
-probability ( "Smoking" ) {
-    table 0.5, 0.5;
-}
-
-probability ( "Cancer" | "Pollution", "Smoking" ) {
-    ( "low", "true" ) 0.03, 0.97;
-    ( "low", "false" ) 0.001, 0.999;
-    ( "high", "true" ) 0.05, 0.95;
-    ( "high", "false" ) 0.02, 0.98;
-}
-
-probability ( "Xray" | "Cancer" ) {
-    ( "true" ) 0.9, 0.1;
-    ( "false" ) 0.2, 0.8;
-}
-
-probability ( "Dyspnoea" | "Cancer" ) {
-    ( "true" ) 0.65, 0.35;
-    ( "false" ) 0.3, 0.7;
-}
-"""
-
-BN_MODEL = BIFReader(string=BN_CANCER_BIF).get_model()
-BN_NODES = list(BN_MODEL.nodes())
-BN_EDGES = list(BN_MODEL.edges())
-
+# --------- Helpers ---------
 
 def render_conversation(messages: List[Message]) -> str:
     lines: List[str] = []
@@ -147,25 +110,25 @@ def parse_update_payload(raw_text: str) -> Dict[str, Optional[bool]]:
     return normalized
 
 
+def to_state_value(value: Optional[bool]) -> Optional[str]:
+    if value is True:
+        return "yes"
+    if value is False:
+        return "no"
+    return value if isinstance(value, str) else None
+
+
 # --------- Core Gemini call ---------
 
 def call_gemini(req: ChatRequest) -> str:
     model = GenerativeModel(req.model)
 
-    # Convert messages to Vertex contents
     contents: list[Content] = []
     for message in req.messages:
-        # Vertex uses "user" / "model" roles
         role = "user" if message.role in ("user", "system") else "model"
-        text_chunks: List[str] = []
-        for part in message.parts:
-            if part.type == "text" and part.text:
-                text_chunks.append(part.text)
-            elif part.text:
-                text_chunks.append(part.text)
+        text_chunks = [part.text for part in message.parts if part.text]
         if not text_chunks:
             continue
-
         contents.append(
             Content(
                 role=role,
@@ -198,12 +161,6 @@ def call_gemini(req: ChatRequest) -> str:
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(body: ChatRequest):
-    """
-    Pass-through chat endpoint.
-
-    body.messages: [{role, content}]
-    body.model: e.g. "gemini-1.5-flash", "gemini-1.5-pro"
-    """
     logger.info(
         "Incoming request -> model=%s messages=%s tools=%s",
         body.model,
@@ -220,7 +177,7 @@ async def chat(body: ChatRequest):
     elif body.model == BN_ENHANCED_MODEL_NAME:
         reply = handle_bn_enhanced_request(body)
     else:
-        raise HTTPException(status_code=400, detail=f"Unknown model {body.model}")
+        raise HTTPException(statuscode=400, detail=f"Unknown model {body.model}")
 
     logger.info("Sending reply (%s chars): %s", len(reply), reply)
     return ChatResponse(reply=reply)
@@ -230,7 +187,7 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
     conversation = render_conversation(body.messages)
 
     prompt = f"""
-You are analyzing a Bayesian network with the following variables: {', '.join(BN_NODES)}
+You are analyzing a Bayesian network with the following variables: {', '.join(BN.nodes)}
 
 Conversation transcript:
 {conversation}
@@ -246,11 +203,88 @@ Respond ONLY with a JSON object where keys are variable names and values are tru
     )
 
     response_text = call_gemini(bn_prompt_request)
-    updates = parse_update_payload(response_text)
+    updates_raw = parse_update_payload(response_text)
+    updates = {
+        node: value
+        for node, value in updates_raw.items()
+        if value is not None and node in BN.nodes
+    }
+    logger.info("Bayesian network updates: %s", updates if updates else "None")
+
+    evidence_map: Dict[str, str] = {}
+    for node, value in updates.items():
+        state_value = to_state_value(value)
+        if state_value:
+            evidence_map[node] = state_value
+    reachable_nodes = reachable_from_evidence(BN.model, list(evidence_map.keys()))
+
+    probabilities: Dict[str, float] = {}
+
+    if reachable_nodes:
+        try:
+            factors = BN.inference.query(
+                variables=reachable_nodes,
+                evidence=evidence_map or None,
+                joint=False,
+                show_progress=False,
+            )
+
+            if not isinstance(factors, dict):
+                factors = {reachable_nodes[0]: factors}
+
+            for node, factor in factors.items():
+                state_names = factor.state_names[node]
+                values = factor.values.tolist()
+                try:
+                    yes_index = state_names.index("yes")
+                    probabilities[node] = float(values[yes_index])
+                except ValueError:
+                    logger.warning(
+                        "Node %s missing 'yes' state in factor %s", node, state_names
+                    )
+        except Exception as exc:
+            logger.exception("Failed to query probabilities: %s", exc)
+
+    logger.info("Updated probabilities: %s", probabilities if probabilities else "None")
+
+    updates_text = json.dumps(updates, indent=2) if updates else "None"
+    probability_text = (
+        json.dumps(probabilities, indent=2)
+        if probabilities
+        else "No probabilistic updates calculated."
+    )
+    bn_message = (
+        "Probabilistic model insights:\n"
+        f"Node updates:\n{updates_text}\n\n"
+        f"Updated probabilities:\n{probability_text}\n\n"
+        "Please incorporate these insights into your reply while still leveraging your "
+        "broader knowledge."
+    )
+
+    analysis_messages = list(body.messages)
+    analysis_messages.append(
+        Message(role="user", parts=[MessagePart(type="text", text=bn_message)])
+    )
+
+    analysis_request = ChatRequest(
+        messages=analysis_messages,
+        tools=body.tools,
+        model=VERTEX_MODEL_ID,
+        temperature=body.temperature,
+        max_output_tokens=body.max_output_tokens,
+    )
+
+    llm_reply = call_gemini(analysis_request)
 
     summary_lines = [
-        "Inferred Bayesian network assignments:",
-        json.dumps(updates, indent=2),
+        "Bayesian network updates:",
+        updates_text,
+        "",
+        "Updated probabilities:",
+        probability_text,
+        "",
+        "Assistant response:",
+        llm_reply,
     ]
     return "\n".join(summary_lines)
 
