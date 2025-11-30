@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from bayes_net import load_cancer_bayes_net
+from womens_health import load_womens_health_bayes_net
 from bn_helpers import reachable_from_evidence
 
 import vertexai
@@ -36,7 +36,7 @@ BASELINE_MODEL_NAME = "Gemini-2.5-Pro (Baseline)"
 BN_ENHANCED_MODEL_NAME = "Gemini-2.5-Pro + BN"
 VERTEX_MODEL_ID = "gemini-2.5-pro"
 
-BN = load_cancer_bayes_net()
+BN = load_womens_health_bayes_net()
 
 
 # --------- Pydantic models ---------
