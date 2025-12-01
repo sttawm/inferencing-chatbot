@@ -6,7 +6,8 @@ from typing import Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from graphviz import Digraph
 from pydantic import BaseModel, Field
 
 from womens_health import load_womens_health_bayes_net
@@ -275,3 +276,14 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "Internal server error"},
     )
+
+
+@app.get("/bayes-graph")
+async def bayes_graph():
+    dot = Digraph(name="womens_health")
+    for node in BN.nodes:
+        dot.node(node)
+    for start, end in BN.edges:
+        dot.edge(start, end)
+    image = dot.pipe(format="png")
+    return Response(content=image, media_type="image/png")

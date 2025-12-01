@@ -4,7 +4,6 @@ import { MenuIcon, ShareIcon } from "lucide-react";
 import type { TooltipContentProps } from "@radix-ui/react-tooltip";
 import Image from "next/image";
 import { ComponentPropsWithRef, type FC } from "react";
-import Link from "next/link";
 
 import { useModelSelection } from "@/app/MyRuntimeProvider";
 import { Button } from "@/components/ui/button";
@@ -86,9 +85,14 @@ const Header: FC = () => {
       <Tooltip>
         <TooltipTrigger asChild>
           <Button variant="outline" asChild>
-            <Link href="/api/bayes-graph" target="_blank" rel="noopener noreferrer">
+            <a
+              href="/api/bayes-graph"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 text-sm"
+            >
               View BN
-            </Link>
+            </a>
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">View Bayesian network</TooltipContent>
