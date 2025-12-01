@@ -2,16 +2,13 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Literal, Optional
+from typing import Dict, Iterator, List, Literal, Optional, Tuple
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from graphviz import Digraph
 from pydantic import BaseModel, Field
-
-from womens_health import load_womens_health_bayes_net
-from bn_helpers import reachable_from_evidence
 
 import vertexai
 from vertexai.generative_models import (
@@ -20,6 +17,9 @@ from vertexai.generative_models import (
     GenerativeModel,
     Part,
 )
+
+from womens_health import load_womens_health_bayes_net
+from bn_helpers import reachable_from_evidence
 
 from prompt import make_prompt, make_probability_prompt
 
@@ -111,11 +111,9 @@ def parse_update_payload(raw_text: str) -> Dict[str, Optional[str]]:
 
 # --------- Core Gemini call ---------
 
-def call_gemini(req: ChatRequest) -> str:
-    model = GenerativeModel(req.model)
-
+def _messages_to_contents(messages: List[Message]) -> List[Content]:
     contents: list[Content] = []
-    for message in req.messages:
+    for message in messages:
         role = "user" if message.role in ("user", "system") else "model"
         text_chunks = [part.text for part in message.parts if part.text]
         if not text_chunks:
@@ -126,6 +124,12 @@ def call_gemini(req: ChatRequest) -> str:
                 parts=[Part.from_text("\n".join(text_chunks))],
             )
         )
+    return contents
+
+
+def call_gemini(req: ChatRequest) -> str:
+    model = GenerativeModel(req.model)
+    contents = _messages_to_contents(req.messages)
 
     gen_config = GenerationConfig(
         temperature=req.temperature,
@@ -148,9 +152,41 @@ def call_gemini(req: ChatRequest) -> str:
     return text
 
 
+def stream_gemini(req: ChatRequest) -> Iterator[str]:
+    model = GenerativeModel(req.model)
+    contents = _messages_to_contents(req.messages)
+
+    gen_config = GenerationConfig(
+        temperature=req.temperature,
+        max_output_tokens=req.max_output_tokens,
+    )
+
+    try:
+        responses = model.generate_content(
+            contents,
+            generation_config=gen_config,
+            stream=True,
+        )
+    except Exception as e:
+        logger.exception("Gemini streaming call failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    collected: list[str] = []
+    for response in responses:
+        text = response.text or ""
+        if text:
+            collected.append(text)
+            yield text
+
+    if not collected:
+        raise HTTPException(status_code=500, detail="Empty response from Gemini")
+
+    logger.info("Streamed Gemini reply (%s chars)", len("".join(collected)))
+
+
 # --------- FastAPI route ---------
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat")
 async def chat(body: ChatRequest):
     logger.info(
         "Incoming request -> model=%s messages=%s tools=%s",
@@ -164,17 +200,16 @@ async def chat(body: ChatRequest):
         payload = body.model_dump()
         payload["model"] = VERTEX_MODEL_ID
         proxy_request = ChatRequest(**payload)
-        reply = call_gemini(proxy_request)
+        stream = stream_gemini(proxy_request)
     elif body.model == BN_ENHANCED_MODEL_NAME:
-        reply = handle_bn_enhanced_request(body)
+        stream = stream_bn_enhanced_response(body)
     else:
-        raise HTTPException(statuscode=400, detail=f"Unknown model {body.model}")
+        raise HTTPException(status_code=400, detail=f"Unknown model {body.model}")
 
-    logger.info("Sending reply (%s chars): %s", len(reply), reply)
-    return ChatResponse(reply=reply)
+    return StreamingResponse(stream, media_type="text/plain")
 
 
-def handle_bn_enhanced_request(body: ChatRequest) -> str:
+def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str]:
     conversation = render_conversation(body.messages)
 
     prompt = make_prompt(conversation)
@@ -252,6 +287,24 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
         max_output_tokens=body.max_output_tokens,
     )
 
+    prefix_text = "\n".join(
+        [
+            "Bayesian network updates:",
+            updates_text,
+            "",
+            "Updated probabilities:",
+            probability_text,
+            "",
+            "Assistant response:",
+            "",
+        ]
+    )
+
+    return prefix_text, analysis_request, updates_text, probability_text
+
+
+def handle_bn_enhanced_request(body: ChatRequest) -> str:
+    prefix_text, analysis_request, updates_text, probability_text = prepare_bn_analysis(body)
     logger.info("LLM probability request: %s", analysis_request.model_dump())
     llm_reply = call_gemini(analysis_request)
     logger.info("LLM response (with probabilities): %s", llm_reply)
@@ -267,6 +320,21 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
         llm_reply,
     ]
     return "\n".join(summary_lines)
+
+
+def stream_bn_enhanced_response(body: ChatRequest) -> Iterator[str]:
+    prefix_text, analysis_request, _, _ = prepare_bn_analysis(body)
+    logger.info("LLM probability request (streaming): %s", analysis_request.model_dump())
+
+    # Send the deterministic BN updates/probabilities first.
+    yield prefix_text
+
+    collected: list[str] = []
+    for chunk in stream_gemini(analysis_request):
+        collected.append(chunk)
+        yield chunk
+
+    logger.info("LLM BN-enhanced response streamed (%s chars)", len("".join(collected)))
 
 
 @app.exception_handler(Exception)

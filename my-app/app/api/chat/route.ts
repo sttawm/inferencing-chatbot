@@ -37,22 +37,79 @@ export async function POST(req: Request) {
       );
     }
 
-    const data = await response.json();
-    const text =
-      typeof data?.reply === "string"
-        ? data.reply
-        : "FastAPI response missing reply field.";
+    const contentType = response.headers.get("content-type") ?? "";
 
+    // If the backend returned JSON, fall back to the legacy non-streaming path.
+    if (contentType.includes("application/json")) {
+      const data = await response.json();
+      const text =
+        typeof data?.reply === "string"
+          ? data.reply
+          : "FastAPI response missing reply field.";
+
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue({ type: "start" });
+          controller.enqueue({ type: "start-step" });
+          controller.enqueue({ type: "text-start", id: "text-1" });
+          controller.enqueue({
+            type: "text-delta",
+            id: "text-1",
+            delta: text,
+          });
+          controller.enqueue({ type: "text-end", id: "text-1" });
+          controller.enqueue({ type: "finish-step" });
+          controller.enqueue({ type: "finish" });
+          controller.close();
+        },
+      });
+
+      return createUIMessageStreamResponse({ stream });
+    }
+
+    if (!response.body) {
+      return new Response(
+        JSON.stringify({ error: "FastAPI response missing body" }),
+        { status: 500 },
+      );
+    }
+
+    const decoder = new TextDecoder();
     const stream = new ReadableStream({
-      start(controller) {
+      async start(controller) {
         controller.enqueue({ type: "start" });
         controller.enqueue({ type: "start-step" });
         controller.enqueue({ type: "text-start", id: "text-1" });
-        controller.enqueue({
-          type: "text-delta",
-          id: "text-1",
-          delta: text,
-        });
+
+        try {
+          const reader = response.body!.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            if (chunk) {
+              controller.enqueue({
+                type: "text-delta",
+                id: "text-1",
+                delta: chunk,
+              });
+            }
+          }
+
+          const trailing = decoder.decode();
+          if (trailing) {
+            controller.enqueue({
+              type: "text-delta",
+              id: "text-1",
+              delta: trailing,
+            });
+          }
+        } catch (err) {
+          controller.error(err);
+          return;
+        }
+
         controller.enqueue({ type: "text-end", id: "text-1" });
         controller.enqueue({ type: "finish-step" });
         controller.enqueue({ type: "finish" });
