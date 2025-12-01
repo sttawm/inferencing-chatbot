@@ -19,7 +19,6 @@ from vertexai.generative_models import (
 )
 
 from womens_health import load_womens_health_bayes_net
-from bn_helpers import reachable_from_evidence
 
 from prompt import make_prompt, make_probability_prompt
 
@@ -107,6 +106,48 @@ def parse_update_payload(raw_text: str) -> Dict[str, Optional[str]]:
         else:
             normalized[key] = str(value).strip()
     return normalized
+
+
+def compute_probabilities(evidence_map: Dict[str, str]) -> Dict[str, Dict[str, float]]:
+    variables = sorted(BN.nodes)
+    try:
+        factors = BN.inference.query(
+            variables=variables,
+            evidence=evidence_map or None,
+            joint=False,
+            show_progress=False,
+        )
+
+        if not isinstance(factors, dict):
+            # When querying a single variable, pgmpy returns a Factor instead of a dict.
+            factors = {variables[0]: factors}
+    except Exception as exc:
+        logger.exception("Failed to query probabilities: %s", exc)
+        return {}
+
+    probabilities: Dict[str, Dict[str, float]] = {}
+    for node, factor in factors.items():
+        state_names = factor.state_names[node]
+        values = factor.values.tolist()
+        probabilities[node] = {
+            state: float(prob)
+            for state, prob in zip(state_names, values)
+        }
+    return probabilities
+
+
+def format_probabilities(probabilities: Dict[str, Dict[str, float]]) -> str:
+    if not probabilities:
+        return "No probabilistic updates calculated."
+
+    lines: list[str] = []
+    for node in sorted(probabilities.keys()):
+        state_probs = probabilities[node]
+        formatted_states = ", ".join(
+            f"{state}: {prob:.3f}" for state, prob in state_probs.items()
+        )
+        lines.append(f"- {node}: {formatted_states}")
+    return "\n".join(lines)
 
 
 # --------- Core Gemini call ---------
@@ -234,40 +275,11 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str]:
     for node, value in updates.items():
         if value:
             evidence_map[node] = value
-    reachable_nodes = reachable_from_evidence(BN.model, list(evidence_map.keys()))
-
-    probabilities: Dict[str, Dict[str, float]] = {}
-
-    if reachable_nodes:
-        try:
-            factors = BN.inference.query(
-                variables=reachable_nodes,
-                evidence=evidence_map or None,
-                joint=False,
-                show_progress=False,
-            )
-
-            if not isinstance(factors, dict):
-                factors = {reachable_nodes[0]: factors}
-
-            for node, factor in factors.items():
-                state_names = factor.state_names[node]
-                values = factor.values.tolist()
-                probabilities[node] = {
-                    state: float(prob)
-                    for state, prob in zip(state_names, values)
-                }
-        except Exception as exc:
-            logger.exception("Failed to query probabilities: %s", exc)
-
+    probabilities = compute_probabilities(evidence_map)
     logger.info("Updated probabilities: %s", probabilities if probabilities else "None")
 
     updates_text = json.dumps(updates, indent=2) if updates else "None"
-    probability_text = (
-        json.dumps(probabilities, indent=2)
-        if probabilities
-        else "No probabilistic updates calculated."
-    )
+    probability_text = format_probabilities(probabilities)
     bn_message = make_probability_prompt(
         conversation=conversation,
         updates_text=updates_text,
