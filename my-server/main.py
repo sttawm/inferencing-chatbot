@@ -140,14 +140,15 @@ def format_probabilities(probabilities: Dict[str, Dict[str, float]]) -> str:
     if not probabilities:
         return "No probabilistic updates calculated."
 
-    lines: list[str] = []
+    tables: list[str] = []
     for node in sorted(probabilities.keys()):
         state_probs = probabilities[node]
-        formatted_states = ", ".join(
-            f"{state}: {prob:.3f}" for state, prob in state_probs.items()
-        )
-        lines.append(f"- {node}: {formatted_states}")
-    return "\n".join(lines)
+        header = f"**{node}**"
+        rows = ["state | probability", "--- | ---"]
+        rows.extend(f"{state} | {prob:.3f}" for state, prob in state_probs.items())
+        tables.append("\n".join([header, *rows]))
+
+    return "\n\n".join(tables)
 
 
 # --------- Core Gemini call ---------
