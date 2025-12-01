@@ -19,6 +19,7 @@ from vertexai.generative_models import (
 )
 
 from womens_health import load_womens_health_bayes_net
+from bn_helpers import reachable_from_evidence
 
 from prompt import make_prompt, make_probability_prompt
 
@@ -108,11 +109,18 @@ def parse_update_payload(raw_text: str) -> Dict[str, Optional[str]]:
     return normalized
 
 
-def compute_probabilities(evidence_map: Dict[str, str]) -> Dict[str, Dict[str, float]]:
-    variables = sorted(BN.nodes)
+def compute_probabilities(
+    variables: List[str], evidence_map: Dict[str, str]
+) -> Dict[str, Dict[str, float]]:
+    if not variables:
+        raise HTTPException(
+            status_code=500,
+            detail="No BN variables available for probability query",
+        )
+
     try:
         factors = BN.inference.query(
-            variables=variables,
+            variables=sorted(variables),
             evidence=evidence_map or None,
             joint=False,
             show_progress=False,
@@ -123,7 +131,7 @@ def compute_probabilities(evidence_map: Dict[str, str]) -> Dict[str, Dict[str, f
             factors = {variables[0]: factors}
     except Exception as exc:
         logger.exception("Failed to query probabilities: %s", exc)
-        return {}
+        raise HTTPException(status_code=500, detail="Failed to query probabilities")
 
     probabilities: Dict[str, Dict[str, float]] = {}
     for node, factor in factors.items():
@@ -133,6 +141,13 @@ def compute_probabilities(evidence_map: Dict[str, str]) -> Dict[str, Dict[str, f
             state: float(prob)
             for state, prob in zip(state_names, values)
         }
+
+    if not probabilities:
+        raise HTTPException(
+            status_code=500,
+            detail="BN probability query returned no results",
+        )
+
     return probabilities
 
 
@@ -276,7 +291,24 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str]:
     for node, value in updates.items():
         if value:
             evidence_map[node] = value
-    probabilities = compute_probabilities(evidence_map)
+    logger.info("BN evidence map: %s", evidence_map if evidence_map else "None")
+
+    reachable_nodes = reachable_from_evidence(BN.model, list(evidence_map.keys()))
+    if not reachable_nodes:
+        if evidence_map:
+            logger.warning(
+                "No reachable BN nodes found for evidence %s; defaulting to remaining nodes.",
+                list(evidence_map.keys()),
+            )
+            reachable_nodes = [
+                node for node in BN.nodes if node not in evidence_map
+            ]
+        else:
+            logger.info("No BN evidence provided; querying all nodes.")
+            reachable_nodes = list(BN.nodes)
+
+    logger.info("BN nodes selected for probability query: %s", reachable_nodes)
+    probabilities = compute_probabilities(reachable_nodes, evidence_map)
     logger.info("Updated probabilities: %s", probabilities if probabilities else "None")
 
     updates_text = json.dumps(updates, indent=2) if updates else "None"
