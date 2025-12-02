@@ -21,7 +21,7 @@ from vertexai.generative_models import (
 
 from womens_health import load_womens_health_bayes_net
 
-from prompt import make_prompt, make_probability_prompt
+from prompt import make_bn_extraction_prompt, make_probability_prompt
 
 # --------- Load env & init Vertex ---------
 ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -320,12 +320,14 @@ async def chat(body: ChatRequest):
 def prepare_bn_analysis(body: ChatRequest) -> Tuple[ChatRequest, str, str, str, float, float, float]:
     conversation = render_conversation(body.messages)
 
-    prompt = make_prompt(conversation)
+    prompt = make_bn_extraction_prompt(conversation)
 
     bn_prompt_request = ChatRequest(
         messages=[Message(role="user", parts=[MessagePart(type="text", text=prompt)])],
         tools={},
         model=VERTEX_MODEL_ID,
+        max_output_tokens=1024,
+        temperature=0.0,
     )
 
     start_evidence_llm = time.perf_counter()
