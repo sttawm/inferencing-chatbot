@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from graphviz import Digraph
 from pydantic import BaseModel, Field
 
+from pgmpy.factors.discrete import State
 from pgmpy.sampling import BayesianModelSampling
 import vertexai
 from vertexai.generative_models import (
@@ -154,9 +155,9 @@ def run_bn_inference(
     logger.info("Sampling BN probabilities with evidence: %s", evidence_map or {})
     try:
         if evidence_map:
-            evidence_list = list(evidence_map.items())
+            evidence_states = [State(var, val) for var, val in evidence_map.items()]
             df = SAMPLER.likelihood_weighted_sample(
-                evidence=evidence_list,
+                evidence=evidence_states,
                 size=FORWARD_SAMPLE_SIZE,
                 show_progress=False,
             )
