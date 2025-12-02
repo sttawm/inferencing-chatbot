@@ -28,6 +28,20 @@ BN_VARIABLES_DICT: dict[str, list[str]] = {
     "Cortisol_Level": ["low", "normal", "high"],
     "Adrenal_Androgens": ["normal", "high"],
     "Family_History_of_PCOS": ["false", "true"],
+    "Hormone_Imbalance": ["false", "true"],
+    "Estrogen_Level": ["low", "normal", "high"],
+    "Progesterone_Level": ["low", "normal", "high"],
+    "Perimenopause": ["false", "true"],
+    "Low_libido": ["false", "true"],
+    "Hot_flashes": ["false", "true"],
+    "Vaginal_dryness": ["false", "true"],
+    "Poor_sleep": ["false", "true"],
+    "Mood_issues": ["false", "true"],
+    "Should_track_estrogen": ["false", "true"],
+    "Should_track_progesterone": ["false", "true"],
+    "Should_do_hormone_replacement_therapy": ["false", "true"],
+    "Should_get_symptom_relief": ["false", "true"],
+    "Take_melatonin": ["false", "true"],
 }
 
 def dict_to_bif_variables(var_dict: dict[str, list[str]]) -> str:
@@ -220,6 +234,131 @@ probability ( "Should_get_a_Continual_Glucose_Monitor" | "Metabolic_Imbalance" )
     ( "false" ) 0.95, 0.05;
     ( "true"  ) 0.60, 0.40;
 }
+
+probability ( "Perimenopause" | "Age" ) {
+    ( "child" ) 0.995, 0.005;
+    ( "teen"  ) 0.995, 0.005;
+    ( "20s"   ) 0.990, 0.010;
+    ( "30s"   ) 0.900, 0.100;
+    ( "40s"   ) 0.400, 0.600;
+    ( "50s"   ) 0.200, 0.800;
+    ( ">60"   ) 0.900, 0.100;
+}
+
+probability ( "Estrogen_Level" | "Perimenopause" ) {
+    ( "false" ) 0.10, 0.80, 0.10;
+    ( "true"  ) 0.50, 0.45, 0.05;
+}
+
+probability ( "Progesterone_Level" | "Perimenopause" ) {
+    ( "false" ) 0.15, 0.80, 0.05;
+    ( "true"  ) 0.60, 0.35, 0.05;
+}
+
+probability ( "Hormone_Imbalance" | "Estrogen_Level" "Progesterone_Level" ) {
+
+    ( "normal" "normal" ) 0.90, 0.10;
+
+    ( "low"   "normal" ) 0.30, 0.70;
+    ( "high"  "normal" ) 0.30, 0.70;
+    ( "normal" "low"   ) 0.30, 0.70;
+    ( "normal" "high"  ) 0.30, 0.70;
+
+    ( "low"   "low"   ) 0.10, 0.90;
+    ( "low"   "high"  ) 0.10, 0.90;
+    ( "high"  "low"   ) 0.10, 0.90;
+    ( "high"  "high"  ) 0.10, 0.90;
+}
+
+probability ( "Hot_flashes" | "Estrogen_Level" "Perimenopause" ) {
+
+    ( "low"    "false" ) 0.80, 0.20;
+    ( "normal" "false" ) 0.95, 0.05;
+    ( "high"   "false" ) 0.97, 0.03;
+
+    ( "low"    "true"  ) 0.30, 0.70;
+    ( "normal" "true"  ) 0.60, 0.40;
+    ( "high"   "true"  ) 0.80, 0.20;
+}
+
+probability ( "Vaginal_dryness" | "Estrogen_Level" "Perimenopause" ) {
+
+    ( "low"    "false" ) 0.70, 0.30;
+    ( "normal" "false" ) 0.95, 0.05;
+    ( "high"   "false" ) 0.97, 0.03;
+
+    ( "low"    "true"  ) 0.30, 0.70;
+    ( "normal" "true"  ) 0.55, 0.45;
+    ( "high"   "true"  ) 0.80, 0.20;
+}
+
+probability ( "Low_libido" | "Estrogen_Level" "Progesterone_Level" ) {
+
+    ( "normal" "normal" ) 0.70, 0.30;
+
+    ( "low"   "normal" ) 0.40, 0.60;
+    ( "high"  "normal" ) 0.40, 0.60;
+    ( "normal" "low"   ) 0.40, 0.60;
+    ( "normal" "high"  ) 0.40, 0.60;
+
+    ( "low"   "low"   ) 0.30, 0.70;
+    ( "low"   "high"  ) 0.30, 0.70;
+    ( "high"  "low"   ) 0.30, 0.70;
+    ( "high"  "high"  ) 0.30, 0.70;
+}
+
+probability ( "Poor_sleep" | "Sleep_Quality" "Hormone_Imbalance" ) {
+
+    ( "good" "false" ) 0.90, 0.10;
+    ( "good" "true"  ) 0.70, 0.30;
+
+    ( "poor" "false" ) 0.40, 0.60;
+    ( "poor" "true"  ) 0.20, 0.80;
+}
+
+probability ( "Mood_issues" | "High_Stress" "Hormone_Imbalance" ) {
+
+    ( "false" "false" ) 0.90, 0.10;
+    ( "false" "true"  ) 0.70, 0.30;
+
+    ( "true"  "false" ) 0.50, 0.50;
+    ( "true"  "true"  ) 0.30, 0.70;
+}
+
+probability ( "Should_track_estrogen" | "Hormone_Imbalance" "Perimenopause" ) {
+    ( "false" "false" ) 0.90, 0.10;
+    ( "true"  "false" ) 0.50, 0.50;
+    ( "false" "true"  ) 0.60, 0.40;
+    ( "true"  "true"  ) 0.30, 0.70;
+}
+
+probability ( "Should_track_progesterone" | "Hormone_Imbalance" "Perimenopause" ) {
+    ( "false" "false" ) 0.85, 0.15;
+    ( "true"  "false" ) 0.45, 0.55;
+    ( "false" "true"  ) 0.55, 0.45;
+    ( "true"  "true"  ) 0.30, 0.70;
+}
+
+probability ( "Should_do_hormone_replacement_therapy" | "Hormone_Imbalance" "Perimenopause" ) {
+    ( "false" "false" ) 0.98, 0.02;
+    ( "true"  "false" ) 0.80, 0.20;
+    ( "false" "true"  ) 0.80, 0.20;
+    ( "true"  "true"  ) 0.40, 0.60;
+}
+
+probability ( "Should_get_symptom_relief" | "Hormone_Imbalance" "Perimenopause" ) {
+    ( "false" "false" ) 0.85, 0.15;
+    ( "true"  "false" ) 0.50, 0.50;
+    ( "false" "true"  ) 0.60, 0.40;
+    ( "true"  "true"  ) 0.20, 0.80;
+}
+
+probability ( "Take_melatonin" | "Poor_sleep" ) {
+    ( "false" ) 0.90, 0.10;
+    ( "true"  ) 0.40, 0.60;
+}
+
+
 """
 
 BN_WOMENS_HEALTH = """
