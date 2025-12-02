@@ -197,15 +197,24 @@ def format_probability_deltas(deltas: Dict[str, Dict[str, float]]) -> str:
     return "\n\n".join(tables)
 
 
-def format_inference_timing(baseline_ms: float, evidence_ms: float) -> str:
-    total_ms = baseline_ms + evidence_ms
-    return "\n".join(
-        [
-            f"Baseline (no evidence): {baseline_ms:.2f} ms",
-            f"With evidence: {evidence_ms:.2f} ms",
-            f"Total: {total_ms:.2f} ms",
-        ]
-    )
+def format_inference_timing(
+    evidence_llm_ms: float,
+    baseline_ms: float,
+    evidence_ms: float,
+    analysis_llm_ms: Optional[float],
+) -> str:
+    total_ms = evidence_llm_ms + baseline_ms + evidence_ms + (analysis_llm_ms or 0.0)
+    lines = [
+        f"LLM evidence extraction: {evidence_llm_ms:.2f} ms",
+        f"BN inference (no evidence): {baseline_ms:.2f} ms",
+        f"BN inference (with evidence): {evidence_ms:.2f} ms",
+    ]
+    if analysis_llm_ms is not None:
+        lines.append(f"LLM answer (with probabilities): {analysis_llm_ms:.2f} ms")
+    else:
+        lines.append("LLM answer (with probabilities): streaming / not timed")
+    lines.append(f"Total: {total_ms:.2f} ms")
+    return "\n".join(lines)
 
 
 # --------- Core Gemini call ---------
@@ -308,7 +317,7 @@ async def chat(body: ChatRequest):
     return StreamingResponse(stream, media_type="text/plain")
 
 
-def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str, str, str]:
+def prepare_bn_analysis(body: ChatRequest) -> Tuple[ChatRequest, str, str, str, float, float, float]:
     conversation = render_conversation(body.messages)
 
     prompt = make_prompt(conversation)
@@ -319,7 +328,9 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str, 
         model=VERTEX_MODEL_ID,
     )
 
+    start_evidence_llm = time.perf_counter()
     response_text = call_gemini(bn_prompt_request)
+    evidence_llm_ms = (time.perf_counter() - start_evidence_llm) * 1000
     logger.info("BN update request payload: %s", bn_prompt_request.model_dump())
     updates_raw = parse_update_payload(response_text)
     updates = {
@@ -358,7 +369,6 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str, 
     updates_text = json.dumps(updates, indent=2) if updates else "None"
     probability_text = format_probabilities(probabilities)
     delta_text = format_probability_deltas(deltas)
-    inference_text = format_inference_timing(baseline_ms, evidence_ms)
     bn_message = make_probability_prompt(
         conversation=conversation,
         updates_text=updates_text,
@@ -374,51 +384,43 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str, 
         messages=analysis_messages,
         tools=body.tools,
         model=VERTEX_MODEL_ID,
-        temperature=body.temperature,
+        temperature=0.0,
         max_output_tokens=body.max_output_tokens,
     )
 
-    prefix_text = "\n".join(
-        [
-            "Bayesian network updates:",
-            updates_text,
-            "",
-            "Updated probabilities:",
-            probability_text,
-            "",
-            "Probability deltas:",
-            delta_text,
-            "",
-            "Inference timing:",
-            inference_text,
-            "",
-            "Assistant response:",
-            "",
-        ]
-    )
-
     return (
-        prefix_text,
         analysis_request,
         updates_text,
         probability_text,
         delta_text,
-        inference_text,
+        evidence_llm_ms,
+        baseline_ms,
+        evidence_ms,
     )
 
 
 def handle_bn_enhanced_request(body: ChatRequest) -> str:
     (
-        _,
         analysis_request,
         updates_text,
         probability_text,
         delta_text,
-        inference_text,
+        evidence_llm_ms,
+        baseline_ms,
+        evidence_ms,
     ) = prepare_bn_analysis(body)
     logger.info("LLM probability request: %s", analysis_request.model_dump())
+    start_analysis_llm = time.perf_counter()
     llm_reply = call_gemini(analysis_request)
+    analysis_llm_ms = (time.perf_counter() - start_analysis_llm) * 1000
     logger.info("LLM response (with probabilities): %s", llm_reply)
+
+    inference_text = format_inference_timing(
+        evidence_llm_ms=evidence_llm_ms,
+        baseline_ms=baseline_ms,
+        evidence_ms=evidence_ms,
+        analysis_llm_ms=analysis_llm_ms,
+    )
 
     summary_lines = [
         "Bayesian network updates:",
@@ -441,14 +443,41 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
 
 def stream_bn_enhanced_response(body: ChatRequest) -> Iterator[str]:
     (
-        prefix_text,
         analysis_request,
-        _,
-        _,
-        _,
-        _,
+        updates_text,
+        probability_text,
+        delta_text,
+        evidence_llm_ms,
+        baseline_ms,
+        evidence_ms,
     ) = prepare_bn_analysis(body)
     logger.info("LLM probability request (streaming): %s", analysis_request.model_dump())
+
+    inference_text = format_inference_timing(
+        evidence_llm_ms=evidence_llm_ms,
+        baseline_ms=baseline_ms,
+        evidence_ms=evidence_ms,
+        analysis_llm_ms=None,
+    )
+
+    prefix_text = "\n".join(
+        [
+            "Bayesian network updates:",
+            updates_text,
+            "",
+            "Updated probabilities:",
+            probability_text,
+            "",
+            "Probability deltas:",
+            delta_text,
+            "",
+            "Inference timing:",
+            inference_text,
+            "",
+            "Assistant response:",
+            "",
+        ]
+    )
 
     # Send the deterministic BN updates/probabilities first.
     yield prefix_text
