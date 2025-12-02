@@ -296,7 +296,7 @@ const BnSidePanels: FC<{
   if (!updates && !probabilities && !deltas) return null;
 
   return (
-    <div className="aui-bn-side-buttons mb-3 flex flex-col items-end gap-2 md:absolute md:right-0 md:top-0 md:mb-0">
+    <div className="aui-bn-side-buttons mb-3 flex flex-col items-end gap-2 md:absolute md:right-0 md:top-0 md:mb-0 md:translate-x-[120%]">
       {updates && (
         <Sheet open={updatesOpen} onOpenChange={setUpdatesOpen}>
           <SheetTrigger asChild>
