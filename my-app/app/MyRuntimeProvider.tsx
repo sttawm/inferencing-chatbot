@@ -22,7 +22,7 @@ const cloud = new AssistantCloud({
   anonymous: true,
 });
 
-export const DEFAULT_MODEL = "Gemini-2.5-Pro (Baseline)";
+export const DEFAULT_MODEL = "Gemini-2.5-Pro + BN";
 
 type ModelContextValue = {
   model: string;

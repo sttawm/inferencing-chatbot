@@ -291,11 +291,12 @@ const BnSidePanels: FC<{
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const [probabilitiesOpen, setProbabilitiesOpen] = useState(false);
   const [deltasOpen, setDeltasOpen] = useState(false);
+  const [timingOpen, setTimingOpen] = useState(false);
 
   if (!updates && !probabilities && !deltas) return null;
 
   return (
-    <div className="aui-bn-side-buttons mb-3 flex flex-col items-end gap-2 md:absolute md:-right-40 md:top-0 md:mb-0">
+    <div className="aui-bn-side-buttons mb-3 flex flex-col items-end gap-2 md:absolute md:right-0 md:top-0 md:mb-0">
       {updates && (
         <Sheet open={updatesOpen} onOpenChange={setUpdatesOpen}>
           <SheetTrigger asChild>
@@ -370,12 +371,26 @@ const BnSidePanels: FC<{
       )}
 
       {inferenceTiming && (
-        <div className="aui-bn-inference-info w-full max-w-[230px] rounded-lg border bg-background/90 px-3 py-2 text-xs shadow-sm">
-          <p className="font-semibold text-muted-foreground">Inference timing</p>
-          <pre className="mt-1 whitespace-pre-wrap text-foreground">
-            {inferenceTiming}
-          </pre>
-        </div>
+        <Sheet open={timingOpen} onOpenChange={setTimingOpen}>
+          <SheetTrigger asChild>
+            <Button size="sm" variant="outline" className="shadow-sm">
+              Inference timing
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="sm:w-[360px]">
+            <SheetHeader>
+              <SheetTitle>Inference timing</SheetTitle>
+              <SheetDescription>
+                Duration of BN inference calls (milliseconds).
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-4 text-sm">
+              <pre className="whitespace-pre-wrap break-words text-foreground">
+                {inferenceTiming}
+              </pre>
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );
