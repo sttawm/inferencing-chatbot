@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Dict, Iterator, List, Literal, Optional, Tuple
 
@@ -19,7 +20,6 @@ from vertexai.generative_models import (
 )
 
 from womens_health import load_womens_health_bayes_net
-from bn_helpers import reachable_from_evidence
 
 from prompt import make_prompt, make_probability_prompt
 
@@ -111,13 +111,14 @@ def parse_update_payload(raw_text: str) -> Dict[str, Optional[str]]:
 
 def compute_probabilities(
     variables: List[str], evidence_map: Dict[str, str]
-) -> Dict[str, Dict[str, float]]:
+) -> Tuple[Dict[str, Dict[str, float]], float]:
     if not variables:
         raise HTTPException(
             status_code=500,
             detail="No BN variables available for probability query",
         )
 
+    start_time = time.perf_counter()
     try:
         factors = BN.inference.query(
             variables=sorted(variables),
@@ -132,6 +133,7 @@ def compute_probabilities(
     except Exception as exc:
         logger.exception("Failed to query probabilities: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to query probabilities")
+    duration_ms = (time.perf_counter() - start_time) * 1000
 
     probabilities: Dict[str, Dict[str, float]] = {}
     for node, factor in factors.items():
@@ -148,7 +150,7 @@ def compute_probabilities(
             detail="BN probability query returned no results",
         )
 
-    return probabilities
+    return probabilities, duration_ms
 
 
 def format_probabilities(probabilities: Dict[str, Dict[str, float]]) -> str:
@@ -160,10 +162,50 @@ def format_probabilities(probabilities: Dict[str, Dict[str, float]]) -> str:
         state_probs = probabilities[node]
         header = f"**{node}**"
         rows = ["state | probability", "--- | ---"]
-        rows.extend(f"{state} | {prob:.3f}" for state, prob in state_probs.items())
+        rows.extend(f"{state} | {prob:.2f}" for state, prob in state_probs.items())
         tables.append("\n".join([header, *rows]))
 
     return "\n\n".join(tables)
+
+
+def compute_probability_deltas(
+    baseline: Dict[str, Dict[str, float]],
+    updated: Dict[str, Dict[str, float]],
+) -> Dict[str, Dict[str, float]]:
+    deltas: Dict[str, Dict[str, float]] = {}
+    for node in sorted(updated.keys()):
+        baseline_states = baseline.get(node)
+        if not baseline_states:
+            continue
+        delta_states: Dict[str, float] = {}
+        for state, updated_value in updated[node].items():
+            delta_states[state] = updated_value - baseline_states.get(state, 0.0)
+        deltas[node] = delta_states
+    return deltas
+
+
+def format_probability_deltas(deltas: Dict[str, Dict[str, float]]) -> str:
+    if not deltas:
+        return "No probabilistic updates calculated."
+
+    tables: list[str] = []
+    for node in sorted(deltas.keys()):
+        header = f"**{node}**"
+        rows = ["state | delta", "--- | ---"]
+        rows.extend(f"{state} | {delta:+.2f}" for state, delta in deltas[node].items())
+        tables.append("\n".join([header, *rows]))
+    return "\n\n".join(tables)
+
+
+def format_inference_timing(baseline_ms: float, evidence_ms: float) -> str:
+    total_ms = baseline_ms + evidence_ms
+    return "\n".join(
+        [
+            f"Baseline (no evidence): {baseline_ms:.2f} ms",
+            f"With evidence: {evidence_ms:.2f} ms",
+            f"Total: {total_ms:.2f} ms",
+        ]
+    )
 
 
 # --------- Core Gemini call ---------
@@ -266,7 +308,7 @@ async def chat(body: ChatRequest):
     return StreamingResponse(stream, media_type="text/plain")
 
 
-def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str]:
+def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str, str, str]:
     conversation = render_conversation(body.messages)
 
     prompt = make_prompt(conversation)
@@ -293,26 +335,30 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str]:
             evidence_map[node] = value
     logger.info("BN evidence map: %s", evidence_map if evidence_map else "None")
 
-    reachable_nodes = reachable_from_evidence(BN.model, list(evidence_map.keys()))
-    if not reachable_nodes:
-        if evidence_map:
-            logger.warning(
-                "No reachable BN nodes found for evidence %s; defaulting to remaining nodes.",
-                list(evidence_map.keys()),
-            )
-            reachable_nodes = [
-                node for node in BN.nodes if node not in evidence_map
-            ]
-        else:
-            logger.info("No BN evidence provided; querying all nodes.")
-            reachable_nodes = list(BN.nodes)
+    query_nodes = [node for node in BN.nodes if node not in evidence_map]
+    if not query_nodes:
+        raise HTTPException(
+            status_code=500,
+            detail="All BN nodes provided as evidence; no nodes left to query.",
+        )
 
-    logger.info("BN nodes selected for probability query: %s", reachable_nodes)
-    probabilities = compute_probabilities(reachable_nodes, evidence_map)
+    logger.info("BN nodes selected for probability query: %s", query_nodes)
+    baseline_probs, baseline_ms = compute_probabilities(query_nodes, {})
+    probabilities, evidence_ms = compute_probabilities(query_nodes, evidence_map)
     logger.info("Updated probabilities: %s", probabilities if probabilities else "None")
+
+    deltas = compute_probability_deltas(baseline_probs, probabilities)
+    logger.info("Probability deltas: %s", deltas if deltas else "None")
+    logger.info(
+        "BN inference timing -> baseline: %.2f ms, with evidence: %.2f ms",
+        baseline_ms,
+        evidence_ms,
+    )
 
     updates_text = json.dumps(updates, indent=2) if updates else "None"
     probability_text = format_probabilities(probabilities)
+    delta_text = format_probability_deltas(deltas)
+    inference_text = format_inference_timing(baseline_ms, evidence_ms)
     bn_message = make_probability_prompt(
         conversation=conversation,
         updates_text=updates_text,
@@ -340,16 +386,36 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[str, ChatRequest, str, str]:
             "Updated probabilities:",
             probability_text,
             "",
+            "Probability deltas:",
+            delta_text,
+            "",
+            "Inference timing:",
+            inference_text,
+            "",
             "Assistant response:",
             "",
         ]
     )
 
-    return prefix_text, analysis_request, updates_text, probability_text
+    return (
+        prefix_text,
+        analysis_request,
+        updates_text,
+        probability_text,
+        delta_text,
+        inference_text,
+    )
 
 
 def handle_bn_enhanced_request(body: ChatRequest) -> str:
-    prefix_text, analysis_request, updates_text, probability_text = prepare_bn_analysis(body)
+    (
+        _,
+        analysis_request,
+        updates_text,
+        probability_text,
+        delta_text,
+        inference_text,
+    ) = prepare_bn_analysis(body)
     logger.info("LLM probability request: %s", analysis_request.model_dump())
     llm_reply = call_gemini(analysis_request)
     logger.info("LLM response (with probabilities): %s", llm_reply)
@@ -361,6 +427,12 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
         "Updated probabilities:",
         probability_text,
         "",
+        "Probability deltas:",
+        delta_text,
+        "",
+        "Inference timing:",
+        inference_text,
+        "",
         "Assistant response:",
         llm_reply,
     ]
@@ -368,7 +440,14 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
 
 
 def stream_bn_enhanced_response(body: ChatRequest) -> Iterator[str]:
-    prefix_text, analysis_request, _, _ = prepare_bn_analysis(body)
+    (
+        prefix_text,
+        analysis_request,
+        _,
+        _,
+        _,
+        _,
+    ) = prepare_bn_analysis(body)
     logger.info("LLM probability request (streaming): %s", analysis_request.model_dump())
 
     # Send the deterministic BN updates/probabilities first.

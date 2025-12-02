@@ -40,6 +40,8 @@ const MarkdownTextImpl = () => {
         <BnSidePanels
           updates={bnSections.updates}
           probabilities={bnSections.probabilities}
+          deltas={bnSections.deltas}
+          inferenceTiming={bnSections.inferenceTiming}
         />
       )}
 
@@ -258,35 +260,42 @@ const defaultComponents = memoizeMarkdownComponents({
 type BnSections = {
   updates: string;
   probabilities: string;
+  deltas: string;
+  inferenceTiming: string;
   assistant: string;
 };
 
 const extractBnSections = (text: string): BnSections | null => {
   const match = text.match(
-    /Bayesian network updates:\s*([\s\S]*?)\n{2,}Updated probabilities:\s*([\s\S]*?)\n{2,}Assistant response:\s*([\s\S]*)/i,
+    /Bayesian network updates:\s*([\s\S]*?)\n{2,}Updated probabilities:\s*([\s\S]*?)\n{2,}Probability deltas:\s*([\s\S]*?)\n{2,}Inference timing:\s*([\s\S]*?)\n{2,}Assistant response:\s*([\s\S]*)/i,
   );
 
   if (!match) return null;
 
-  const [, updates, probabilities, assistant] = match;
+  const [, updates, probabilities, deltas, inferenceTiming, assistant] = match;
   return {
     updates: updates.trim(),
     probabilities: probabilities.trim(),
+    deltas: deltas.trim(),
+    inferenceTiming: inferenceTiming.trim(),
     assistant: assistant.trim(),
   };
 };
 
-const BnSidePanels: FC<{ updates: string; probabilities: string }> = ({
-  updates,
-  probabilities,
-}) => {
+const BnSidePanels: FC<{
+  updates: string;
+  probabilities: string;
+  deltas: string;
+  inferenceTiming: string;
+}> = ({ updates, probabilities, deltas, inferenceTiming }) => {
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const [probabilitiesOpen, setProbabilitiesOpen] = useState(false);
+  const [deltasOpen, setDeltasOpen] = useState(false);
 
-  if (!updates && !probabilities) return null;
+  if (!updates && !probabilities && !deltas) return null;
 
   return (
-    <div className="aui-bn-side-buttons mb-3 flex justify-end gap-2 md:absolute md:-right-36 md:top-0 md:mb-0 md:flex-col">
+    <div className="aui-bn-side-buttons mb-3 flex flex-col items-end gap-2 md:absolute md:-right-40 md:top-0 md:mb-0">
       {updates && (
         <Sheet open={updatesOpen} onOpenChange={setUpdatesOpen}>
           <SheetTrigger asChild>
@@ -332,6 +341,41 @@ const BnSidePanels: FC<{ updates: string; probabilities: string }> = ({
             </div>
           </SheetContent>
         </Sheet>
+      )}
+
+      {deltas && (
+        <Sheet open={deltasOpen} onOpenChange={setDeltasOpen}>
+          <SheetTrigger asChild>
+            <Button size="sm" variant="outline" className="shadow-sm">
+              Probability deltas
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="sm:w-[420px]">
+            <SheetHeader>
+              <SheetTitle>Probability deltas</SheetTitle>
+              <SheetDescription>
+                Difference vs. baseline (no evidence).
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-4 max-h-[70vh] overflow-y-auto pr-1">
+              <MarkdownTextPrimitive
+                remarkPlugins={[remarkGfm]}
+                className="aui-md"
+                components={defaultComponents}
+                preprocess={() => deltas}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
+
+      {inferenceTiming && (
+        <div className="aui-bn-inference-info w-full max-w-[230px] rounded-lg border bg-background/90 px-3 py-2 text-xs shadow-sm">
+          <p className="font-semibold text-muted-foreground">Inference timing</p>
+          <pre className="mt-1 whitespace-pre-wrap text-foreground">
+            {inferenceTiming}
+          </pre>
+        </div>
       )}
     </div>
   );
