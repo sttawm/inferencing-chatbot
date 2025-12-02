@@ -31,19 +31,18 @@ BN_VARIABLES_DICT: dict[str, list[str]] = {
     
     # NEW
     "Perimenopause": ["false", "true"],
-
     "Estrogen_Level": ["low", "normal", "high"],
     "Progesterone_Level": ["low", "normal", "high"],
     "Hormone_Imbalance": ["false", "true"],
     "Hot_flashes": ["false", "true"],
     "Vaginal_dryness": ["false", "true"],
     "Low_libido": ["false", "true"],
-    # "Mood_issues": ["false", "true"],
-    # "Should_track_estrogen": ["false", "true"],
-    # "Should_track_progesterone": ["false", "true"],
-    # "Should_do_hormone_replacement_therapy": ["false", "true"],
-    # "Should_get_symptom_relief": ["false", "true"],
-    # "Take_melatonin": ["false", "true"],
+    "Mood_issues": ["false", "true"],
+    "Should_track_estrogen": ["false", "true"],
+    "Should_track_progesterone": ["false", "true"],
+    "Should_do_hormone_replacement_therapy": ["false", "true"],
+    "Should_get_symptom_relief": ["false", "true"],
+    "Take_melatonin": ["false", "true"],
 }
 
 def dict_to_bif_variables(var_dict: dict[str, list[str]]) -> str:
@@ -297,6 +296,7 @@ probability ( "Vaginal_dryness" | "Estrogen_Level" "Perimenopause" ) {
     ( "low"    "true"  ) 0.30, 0.70;
     ( "normal" "true"  ) 0.55, 0.45;
     ( "high"   "true"  ) 0.80, 0.20;
+}
 
 
 
@@ -315,9 +315,6 @@ probability ( "Low_libido" | "Estrogen_Level" "Progesterone_Level" ) {
     ( "high"  "low"   ) 0.30, 0.70;
     ( "high"  "high"  ) 0.30, 0.70;
 }
-}
-"""
-NOT_YET = """
 
 probability ( "Sleep_Quality" | "Hormone_Imbalance" ) {
     ( "false" ) 0.80, 0.20;   // no hormone imbalance → mostly good sleep

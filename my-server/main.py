@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from graphviz import Digraph
 from pydantic import BaseModel, Field
 
+from pgmpy.sampling import BayesianModelSampling
 import vertexai
 from vertexai.generative_models import (
     Content,
@@ -43,6 +44,8 @@ BN_ENHANCED_MODEL_NAME = "Gemini-2.5-Pro + BN"
 VERTEX_MODEL_ID = "gemini-2.5-pro"
 
 BN = load_womens_health_bayes_net()
+SAMPLER = BayesianModelSampling(BN.model)
+FORWARD_SAMPLE_SIZE = 20000
 
 
 # --------- Pydantic models ---------
@@ -135,6 +138,66 @@ def parse_update_payload(raw_text: str) -> Dict[str, Optional[str]]:
 def compute_probabilities(
     variables: List[str], evidence_map: Dict[str, str]
 ) -> Tuple[Dict[str, Dict[str, float]], float]:
+    return run_bn_inference(variables, evidence_map)
+
+
+def run_bn_inference(
+    variables: List[str], evidence_map: Dict[str, str]
+) -> Tuple[Dict[str, Dict[str, float]], float]:
+    if not variables:
+        raise HTTPException(
+            status_code=500,
+            detail="No BN variables available for probability query",
+        )
+
+    start_time = time.perf_counter()
+    logger.info("Sampling BN probabilities with evidence: %s", evidence_map or {})
+    try:
+        if evidence_map:
+            evidence_list = list(evidence_map.items())
+            df = SAMPLER.likelihood_weighted_sample(
+                evidence=evidence_list,
+                size=FORWARD_SAMPLE_SIZE,
+                show_progress=False,
+            )
+        else:
+            df = SAMPLER.forward_sample(
+                size=FORWARD_SAMPLE_SIZE,
+                show_progress=False,
+            )
+    except Exception as exc:
+        logger.exception("Failed to sample probabilities: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to sample probabilities")
+
+    duration_ms = (time.perf_counter() - start_time) * 1000
+
+    probabilities: Dict[str, Dict[str, float]] = {}
+    for node in sorted(variables):
+        if node not in df.columns:
+            continue
+        state_names = BN.model.get_cpds(node).state_names[node]
+        if "_weight" in df:
+            weighted = df.groupby(node)["_weight"].sum()
+            total_weight = df["_weight"].sum()
+            counts = weighted / total_weight if total_weight else weighted
+        else:
+            counts = df[node].value_counts(normalize=True)
+        probabilities[node] = {
+            state: float(counts.get(state, 0.0)) for state in state_names
+        }
+
+    if not probabilities:
+        raise HTTPException(
+            status_code=500,
+            detail="BN probability query returned no results",
+        )
+
+    return probabilities, duration_ms
+
+
+def run_exact_bn_inference(
+    variables: List[str], evidence_map: Dict[str, str]
+) -> Tuple[Dict[str, Dict[str, float]], float]:
     if not variables:
         raise HTTPException(
             status_code=500,
@@ -149,15 +212,13 @@ def compute_probabilities(
             joint=False,
             show_progress=False,
         )
-
         if not isinstance(factors, dict):
-            # When querying a single variable, pgmpy returns a Factor instead of a dict.
             factors = {variables[0]: factors}
     except Exception as exc:
-        logger.exception("Failed to query probabilities: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to query probabilities")
-    duration_ms = (time.perf_counter() - start_time) * 1000
+        logger.exception("Failed exact BN inference: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to compute probabilities")
 
+    duration_ms = (time.perf_counter() - start_time) * 1000
     probabilities: Dict[str, Dict[str, float]] = {}
     for node, factor in factors.items():
         state_names = factor.state_names[node]
@@ -349,7 +410,6 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[ChatRequest, str, str, str, 
         messages=[Message(role="user", parts=[MessagePart(type="text", text=prompt)])],
         tools={},
         model=VERTEX_MODEL_ID,
-        max_output_tokens=1024,
         temperature=0.0,
     )
 

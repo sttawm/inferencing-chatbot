@@ -25,7 +25,7 @@ You are analyzing a Bayesian network with the following variables and allowed va
 {dsl}
 
 You must choose exactly ONE allowed value for any variable you decide to return.
-If a variable cannot be inferred from the conversation, set its value to null.
+If a variable cannot be inferred from the conversation, omit that key entirely.
 
 Your response must be a valid JSON object:
 - keys = variable names
