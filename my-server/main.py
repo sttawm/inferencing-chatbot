@@ -274,10 +274,20 @@ def format_probability_deltas(deltas: Dict[str, Dict[str, float]]) -> str:
         return "No probabilistic updates calculated."
 
     tables: list[str] = []
-    for node in sorted(deltas.keys()):
+    sorted_nodes = sorted(
+        deltas.keys(),
+        key=lambda n: sum(abs(v) for v in deltas[n].values()),
+        reverse=True,
+    )
+    for node in sorted_nodes:
+        sorted_states = dict(
+            sorted(deltas[node].items(), key=lambda x: x[1], reverse=True)
+        )
         header = f"**{node}**"
         rows = ["state | delta", "--- | ---"]
-        rows.extend(f"{state} | {delta:+.2f}" for state, delta in deltas[node].items())
+        rows.extend(
+            f"{state} | {delta:+.2f}" for state, delta in sorted_states.items()
+        )
         tables.append("\n".join([header, *rows]))
     return "\n\n".join(tables)
 
