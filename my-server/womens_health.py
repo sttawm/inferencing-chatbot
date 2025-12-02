@@ -13,7 +13,7 @@ BN_VARIABLES_DICT: dict[str, list[str]] = {
     "Metabolic_Imbalance": ["false", "true"],
     "Adrenal_Imbalance": ["false", "true"],
     "PCOS": ["false", "true"],
-    "Age": ["child", "teen", "20s", "30s", "40s", "50s", ">60"],
+    "Age": ["child", "teen", "20s", "30s", "40s", "50s", "60+"],
     "Irregular_Periods": ["false", "true"],
     "Painful_Periods": ["false", "true"],
     "Weight_Gain": ["false", "true"],
@@ -82,7 +82,7 @@ probability ( "Central_Obesity" | "Age" ) {
     ( "30s" ) 0.70, 0.30;
     ( "40s" ) 0.60, 0.40;
     ( "50s" ) 0.55, 0.45;
-    ( ">60" ) 0.50, 0.50;
+    ( "60+" ) 0.50, 0.50;
 }
 
 probability ( "Metabolic_Imbalance" | "Central_Obesity" "Age" ) {
@@ -94,7 +94,7 @@ probability ( "Metabolic_Imbalance" | "Central_Obesity" "Age" ) {
     ( "false" "30s"   ) 0.860, 0.140;
     ( "false" "40s"   ) 0.780, 0.220;
     ( "false" "50s"   ) 0.720, 0.280;
-    ( "false" ">60"   ) 0.600, 0.400;
+    ( "false" "60+"   ) 0.600, 0.400;
 
     // Central Obesity = true
     ( "true"  "child" ) 0.900, 0.100;
@@ -103,7 +103,7 @@ probability ( "Metabolic_Imbalance" | "Central_Obesity" "Age" ) {
     ( "true"  "30s"   ) 0.650, 0.350;
     ( "true"  "40s"   ) 0.550, 0.450;
     ( "true"  "50s"   ) 0.450, 0.550;
-    ( "true"  ">60"   ) 0.300, 0.700;
+    ( "true"  "60+"   ) 0.300, 0.700;
 }
 
 probability ( "PCOS" | "Adrenal_Imbalance" "Metabolic_Imbalance" "Age" ) {
@@ -144,10 +144,10 @@ probability ( "PCOS" | "Adrenal_Imbalance" "Metabolic_Imbalance" "Age" ) {
     ( "true"  "true"  "50s" ) 0.78, 0.22;
 
     // Age > 60
-    ( "false" "false" ">60" ) 0.99, 0.01;
-    ( "false" "true"  ">60" ) 0.89, 0.11;
-    ( "true"  "false" ">60" ) 0.94, 0.06;
-    ( "true"  "true"  ">60" ) 0.79, 0.21;
+    ( "false" "false" "60+" ) 0.99, 0.01;
+    ( "false" "true"  "60+" ) 0.89, 0.11;
+    ( "true"  "false" "60+" ) 0.94, 0.06;
+    ( "true"  "true"  "60+" ) 0.79, 0.21;
 }
 
 probability ( "Irregular_Periods" | "PCOS" ) {
@@ -177,7 +177,7 @@ probability ( "Sleep_Quality" | "Age" ) {
     ( "30s"   ) 0.65, 0.35;
     ( "40s"   ) 0.60, 0.40;
     ( "50s"   ) 0.55, 0.45;
-    ( ">60"   ) 0.50, 0.50;
+    ( "60+"   ) 0.50, 0.50;
 }
 
 probability ( "High_Stress" | "Sleep_Quality" ) {
@@ -247,7 +247,7 @@ probability ( "Perimenopause" | "Age" ) {
     ( "30s"   ) 0.900, 0.100;
     ( "40s"   ) 0.400, 0.600;
     ( "50s"   ) 0.200, 0.800;
-    ( ">60"   ) 0.900, 0.100;
+    ( "60+"   ) 0.900, 0.100;
 }
 
 probability ( "Estrogen_Level" | "Perimenopause" ) {

@@ -304,7 +304,7 @@ const BnSidePanels: FC<{
               BN updates
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="sm:w-[420px]">
+          <SheetContent side="right" className="sm:w-[420px] px-4">
             <SheetHeader>
               <SheetTitle>Bayesian network updates</SheetTitle>
               <SheetDescription>Evidence provided to the BN.</SheetDescription>
@@ -325,7 +325,7 @@ const BnSidePanels: FC<{
               Probabilities
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="sm:w-[420px]">
+          <SheetContent side="right" className="sm:w-[420px] px-4">
             <SheetHeader>
               <SheetTitle>Updated probabilities</SheetTitle>
               <SheetDescription>
@@ -351,7 +351,7 @@ const BnSidePanels: FC<{
               Probability deltas
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="sm:w-[420px]">
+          <SheetContent side="right" className="sm:w-[420px] px-4">
             <SheetHeader>
               <SheetTitle>Probability deltas</SheetTitle>
               <SheetDescription>
@@ -377,7 +377,7 @@ const BnSidePanels: FC<{
               Inference timing
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="sm:w-[360px]">
+          <SheetContent side="right" className="sm:w-[360px] px-4">
             <SheetHeader>
               <SheetTitle>Inference timing</SheetTitle>
               <SheetDescription>
@@ -385,7 +385,7 @@ const BnSidePanels: FC<{
               </SheetDescription>
             </SheetHeader>
             <div className="mt-4 text-sm">
-              <pre className="whitespace-pre-wrap break-words text-foreground">
+              <pre className="whitespace-pre-wrap break-words rounded-lg bg-muted/40 p-3 text-foreground">
                 {inferenceTiming}
               </pre>
             </div>
