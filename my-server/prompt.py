@@ -31,6 +31,7 @@ Your response must be a valid JSON object:
 - keys = variable names
 - values = one of the allowed values, or null
 - no extra text, no explanations
+- DO NOT wrap the JSON in code fences; respond with raw JSON text only
 
 Examples:
 - Conversation: "I'm 32, my periods are irregular and I've been gaining weight."
@@ -40,12 +41,12 @@ Examples:
 - Conversation: "I'm a teenager and my doctor says my cortisol and adrenal androgens are high."
   JSON: {{"Age": "teen", "Cortisol_Level": "high", "Adrenal_Androgens": "high"}}
 - Conversation: "I'm just browsing your site and don't have any symptoms to share yet."
-  JSON: {{"Age": null, "Irregular_Periods": null, "Weight_Gain": null}}
+  JSON: {{}}
 
 Conversation:
 {conversation}
 
-Respond ONLY with JSON.
+Respond ONLY with raw JSON (no code fences, no markdown).
 """.strip()
 
 def make_probability_prompt(

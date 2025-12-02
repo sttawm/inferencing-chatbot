@@ -7,7 +7,7 @@ const FASTAPI_MODELS = new Set([
   "Gemini-2.5-Pro + BN",
 ]);
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const { messages, system, tools, model } = await req.json();

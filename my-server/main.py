@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import re
 from pathlib import Path
 from typing import Dict, Iterator, List, Literal, Optional, Tuple
 
@@ -83,19 +84,41 @@ def render_conversation(messages: List[Message]) -> str:
 
 
 def parse_update_payload(raw_text: str) -> Dict[str, Optional[str]]:
+    text = raw_text.strip()
+
+    # 1) Attempt direct JSON parse.
+    candidates: list[str] = [text]
+
+    # 2) Attempt fenced blocks, prefer the last one if multiple exist.
+    fence_matches = re.findall(
+        r"```(?:json)?\\s*({[\\s\\S]*?})\\s*```", raw_text, flags=re.IGNORECASE
+    )
+    if fence_matches:
+        candidates.append(fence_matches[-1])
+
+    # 3) Fallback: first-to-last brace slice.
     start = raw_text.find("{")
     end = raw_text.rfind("}")
-    if start == -1 or end == -1 or end <= start:
+    if start != -1 and end != -1 and end > start:
+        candidates.append(raw_text[start : end + 1])
+
+    payload = None
+    last_error: Optional[Exception] = None
+    for snippet in candidates:
+        try:
+            payload = json.loads(snippet)
+            break
+        except Exception as exc:
+            last_error = exc
+
+    if payload is None:
         raise HTTPException(
             status_code=500,
-            detail="LLM response missing JSON payload for BN updates",
-        )
-    snippet = raw_text[start : end + 1]
-    try:
-        payload = json.loads(snippet)
-    except json.JSONDecodeError as exc:
-        raise HTTPException(
-            status_code=500, detail=f"Unable to parse BN update JSON: {exc}"
+            detail=(
+                "LLM response was not valid JSON. "
+                f"Raw response: {text or '<empty>'}. "
+                f"Error: {last_error}"
+            ),
         )
 
     normalized: Dict[str, Optional[str]] = {}
@@ -330,10 +353,12 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[ChatRequest, str, str, str, 
         temperature=0.0,
     )
 
+    logger.info("BN update request payload: %s", bn_prompt_request.model_dump())
     start_evidence_llm = time.perf_counter()
     response_text = call_gemini(bn_prompt_request)
+    logger.info("LLM BN extraction raw response: %s", response_text)
     evidence_llm_ms = (time.perf_counter() - start_evidence_llm) * 1000
-    logger.info("BN update request payload: %s", bn_prompt_request.model_dump())
+
     updates_raw = parse_update_payload(response_text)
     updates = {
         node: value
@@ -415,7 +440,7 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
     start_analysis_llm = time.perf_counter()
     llm_reply = call_gemini(analysis_request)
     analysis_llm_ms = (time.perf_counter() - start_analysis_llm) * 1000
-    logger.info("LLM response (with probabilities): %s", llm_reply)
+    logger.info("LLM response (with probabilities) raw: %s", llm_reply)
 
     inference_text = format_inference_timing(
         evidence_llm_ms=evidence_llm_ms,
@@ -494,11 +519,11 @@ def stream_bn_enhanced_response(body: ChatRequest) -> Iterator[str]:
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, HTTPException):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
     logger.exception("Unhandled exception for %s %s", request.method, request.url)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"},
-    )
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 @app.get("/bayes-graph")

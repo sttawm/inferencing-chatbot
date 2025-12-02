@@ -55,3 +55,16 @@ def test_bayes_graph_endpoint():
     assert response.status_code == 200
     assert response.headers.get("content-type") == "image/png"
     assert response.content
+
+
+@pytest.mark.timeout(10)
+def test_full_inference_without_evidence_completes_quickly():
+    bn = load_womens_health_bayes_net()
+    # Ensure querying all nodes with no evidence does not hang; timeout enforced by marker.
+    factors = bn.inference.query(
+        variables=["PCOS"] # bn.nodes,
+        evidence={},
+        joint=False,
+        show_progress=True,
+    )
+    assert factors, "Expected factors for all nodes"
