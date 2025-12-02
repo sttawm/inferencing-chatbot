@@ -120,24 +120,34 @@ const ThreadSuggestions: FC = () => {
     <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
       {[
         {
-          title: "What's the weather",
-          label: "in San Francisco?",
-          action: "What's the weather in San Francisco?",
+          title: "Suspecting PCOS",
+          label: "Need next steps",
+          action: "I'm in my 30s and I suspect I have PCOS. What should I do?",
         },
         {
-          title: "Explain React hooks",
-          label: "like useState and useEffect",
-          action: "Explain React hooks like useState and useEffect",
+          title: "Irregular periods",
+          label: "and weight gain",
+          action: "My periods are irregular and I've gained weight recently. What should I track?",
         },
         {
-          title: "Write a SQL query",
-          label: "to find top customers",
-          action: "Write a SQL query to find top customers",
+          title: "High stress + poor sleep",
+          label: "impact?",
+          action: "Could high stress and poor sleep be affecting my hormones?",
         },
         {
-          title: "Create a meal plan",
-          label: "for healthy weight loss",
-          action: "Create a meal plan for healthy weight loss",
+          title: "Family history",
+          label: "of PCOS",
+          action: "PCOS runs in my family. What signs should I watch for?",
+        },
+        {
+          title: "Metabolic imbalance",
+          label: "concerns",
+          action: "How do I know if metabolic imbalance is behind my symptoms?",
+        },
+        {
+          title: "Blood sugar habits",
+          label: "and diet tips",
+          action: "Should I cut foods that spike blood sugar to manage my symptoms?",
         },
       ].map((suggestedAction, index) => (
         <m.div

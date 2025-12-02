@@ -43,19 +43,26 @@ def make_probability_prompt(
     updates_text: str,
     probability_text: str,
 ) -> str:
-    """
-    Build the follow-up prompt that combines the conversation,
-    BN updates, and probabilities before asking Gemini to respond.
-    """
+    """Compose the second-stage prompt that injects BN context."""
     return (
-        "You are assisting a user based on the following conversation and\n"
-        "probabilistic insights derived from a Bayesian network.\n"
-        "Use your own knowledge and the provided probabilities to craft a helpful response.\n\n"
-        "Conversation:\n"
-        f"{conversation}\n\n"
-        "Node updates:\n"
-        f"{updates_text}\n\n"
-        "Updated probabilities:\n"
-        f"{probability_text}\n\n"
-        "Provide a thoughtful reply."
+        f"""
+You are speaking on behalf of an ObGyn clinic, and you are assisting a user based on the following conversation and
+probabilistic insights derived from a Bayesian network.
+
+Use your own knowledge and the provided probabilities to craft a helpful response. 
+
+Conversation:
+{conversation}
+
+Node updates:
+{updates_text}
+
+Updated probabilities:
+{probability_text}
+
+Instead of referencing exact probabilities, use qualitative terms like "likely", "unlikely", "possible", or "rare" to convey the information.
+
+The user doesn't know about this Bayesian network analysis; integrate the insights naturally into your response as if you are responding directly to the user.
+
+Provide a thoughtful reply. Finish your answer completely and naturally."""
     )
