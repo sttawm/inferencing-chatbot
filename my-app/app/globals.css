@@ -46,11 +46,11 @@
 :root {
   --radius: 0.625rem;
   --background: oklch(0.98 0.03 40); /* soft peach canvas */
-  --foreground: oklch(0.18 0.02 40); /* deep cocoa text */
+  --foreground: oklch(0.24 0.06 40); /* richer cocoa text */
   --card: oklch(0.99 0.02 40);
-  --card-foreground: oklch(0.18 0.02 40);
+  --card-foreground: oklch(0.24 0.06 40);
   --popover: oklch(0.99 0.02 40);
-  --popover-foreground: oklch(0.18 0.02 40);
+  --popover-foreground: oklch(0.24 0.06 40);
   --primary: oklch(0.72 0.13 40); /* richer peach for primary */
   --primary-foreground: oklch(0.16 0.02 40);
   --secondary: oklch(0.95 0.04 40);
@@ -69,7 +69,7 @@
   --chart-4: oklch(0.78 0.15 70);
   --chart-5: oklch(0.7 0.15 10);
   --sidebar: oklch(0.98 0.03 40);
-  --sidebar-foreground: oklch(0.18 0.02 40);
+  --sidebar-foreground: oklch(0.24 0.06 40);
   --sidebar-primary: oklch(0.72 0.13 40);
   --sidebar-primary-foreground: oklch(0.16 0.02 40);
   --sidebar-accent: oklch(0.95 0.03 40);
@@ -80,11 +80,11 @@
 
 .dark {
   --background: oklch(0.16 0.02 40);
-  --foreground: oklch(0.96 0.02 20);
+  --foreground: oklch(0.9 0.05 40);
   --card: oklch(0.18 0.02 40);
-  --card-foreground: oklch(0.96 0.02 20);
+  --card-foreground: oklch(0.9 0.05 40);
   --popover: oklch(0.18 0.02 40);
-  --popover-foreground: oklch(0.96 0.02 20);
+  --popover-foreground: oklch(0.9 0.05 40);
   --primary: oklch(0.78 0.12 40);
   --primary-foreground: oklch(0.16 0.02 40);
   --secondary: oklch(0.22 0.02 40);
@@ -103,7 +103,7 @@
   --chart-4: oklch(0.74 0.14 70);
   --chart-5: oklch(0.64 0.13 10);
   --sidebar: oklch(0.18 0.02 40);
-  --sidebar-foreground: oklch(0.96 0.02 20);
+  --sidebar-foreground: oklch(0.9 0.05 40);
   --sidebar-primary: oklch(0.66 0.15 40);
   --sidebar-primary-foreground: oklch(0.16 0.02 40);
   --sidebar-accent: oklch(0.22 0.02 40);
@@ -119,5 +119,9 @@
   body {
     @apply bg-background text-foreground;
     background-image: radial-gradient(circle at 20% 20%, color-mix(in srgb, oklch(0.98 0.03 40) 60%, transparent), transparent 35%), radial-gradient(circle at 80% 10%, color-mix(in srgb, oklch(0.72 0.13 40) 20%, transparent), transparent 40%), radial-gradient(circle at 50% 80%, color-mix(in srgb, oklch(0.95 0.03 40) 30%, transparent), transparent 45%);
+    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--foreground);
   }
 }
