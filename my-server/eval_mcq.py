@@ -19,11 +19,34 @@ from main import (
 # Fill this in with your actual evaluation prompt.
 # It should contain the placeholder "{question_block}" where the formatted question/options will be injected.
 PROMPT_TEMPLATE = """
-You are answering a multiple-choice question. Read the question and choose the single best answer.
+You will be given a multiple-choice question in the following format:
+
+Question: "<question text>"
+
+Choices:
+(A) <option A>
+(B) <option B>
+(C) <option C>
+(D) <option D>
+
+Your task:
+	1.	Read the entire block exactly as given.
+	2.	Choose the single best answer: A, B, C, or D.
+	3.	Respond only with a the letter in this form:
+
+A
+
+(Replace "A" with "B", "C", or "D" as appropriate.)
+
+Strict rules:
+	•	Do NOT output the answer text — only the letter.
+	•	Do NOT provide explanations.
+	•	Do NOT rewrite, summarize, or comment on the question.
+	•	Do NOT output anything except the JSON object.
+
+You will now receive the question block. 
 
 {question_block}
-
-Respond with just the letter of the best answer (A, B, C, or D) and a brief rationale.
 """.strip()
 
 
@@ -54,7 +77,9 @@ def parse_letter(response_text: str) -> str:
     for ch in response_text:
         if ch.upper() in {"A", "B", "C", "D"}:
             return ch.upper()
-    return ""
+        else:
+            raise ValueError("Response is not a valid answer letter. Response was:\n" + response_text)
+    raise ValueError("Response is empty. Response was:\n" + response_text)
 
 
 def evaluate_questions(
@@ -75,6 +100,7 @@ def evaluate_questions(
             max_output_tokens=2048,
         )
         baseline_reply = call_gemini(baseline_body)
+        logging.info("Baseline full reply:\n%s", baseline_reply)
         baseline_letter = parse_letter(baseline_reply)
 
         logging.info("Q%d/%d | Asking BN model: %s", idx, len(questions), q["question"])
@@ -86,6 +112,7 @@ def evaluate_questions(
             max_output_tokens=2048,
         )
         bn_reply_full = handle_bn_enhanced_request(bn_body)
+        logging.info("BN full reply:\n%s", bn_reply_full)
         # Extract assistant response section
         if "Assistant response:" in bn_reply_full:
             bn_reply = bn_reply_full.split("Assistant response:", 1)[1].strip()
