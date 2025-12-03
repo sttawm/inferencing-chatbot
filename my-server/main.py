@@ -540,6 +540,7 @@ def handle_bn_enhanced_request(body: ChatRequest) -> str:
 
 
 def stream_bn_enhanced_response(body: ChatRequest) -> Iterator[str]:
+    yield "Processing: extracting BN updates and running inference...\n"
     (
         analysis_request,
         updates_text,
@@ -551,12 +552,16 @@ def stream_bn_enhanced_response(body: ChatRequest) -> Iterator[str]:
     ) = prepare_bn_analysis(body)
     logger.info("LLM probability request (streaming): %s", analysis_request.model_dump())
 
+    yield "Finished BN inference. Preparing LLM response...\n"
+
     inference_text = format_inference_timing(
         evidence_llm_ms=evidence_llm_ms,
         baseline_ms=baseline_ms,
         evidence_ms=evidence_ms,
         analysis_llm_ms=None,
     )
+
+    yield "Chatting with LLM using probabilistic context...\n"
 
     prefix_text = "\n".join(
         [
