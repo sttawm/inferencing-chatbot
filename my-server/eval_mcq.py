@@ -85,9 +85,10 @@ def parse_letter(response_text: str) -> str:
 def evaluate_questions(
     questions: List[Dict[str, Any]],
     seed: int | None = None,
-) -> List[Dict[str, Any]]:
+) -> Dict[str, Any]:
     results: List[Dict[str, Any]] = []
     failures = 0
+    total_attempted = 0
     for idx, q in enumerate(questions, start=1):
         if failures > 5:
             logging.error("Aborting: more than 5 failures encountered.")
@@ -96,6 +97,7 @@ def evaluate_questions(
         while attempt < 3:
             attempt += 1
             try:
+                total_attempted += 1
                 formatted = build_question_block(q, seed=seed + idx if seed is not None else None)
                 prompt = PROMPT_TEMPLATE.format(question_block=formatted["block"])
 
@@ -122,12 +124,11 @@ def evaluate_questions(
                     max_output_tokens=2048,
                 )
                 bn_reply_full = handle_bn_enhanced_request(bn_body)
-                logging.info("BN full reply:\n%s", bn_reply_full)
-                # Extract assistant response section
                 if "Assistant response:" in bn_reply_full:
                     bn_reply = bn_reply_full.split("Assistant response:", 1)[1].strip()
                 else:
                     bn_reply = bn_reply_full.strip()
+                logging.info("BN full reply (assistant section):\n%s", bn_reply)
                 bn_letter = parse_letter(bn_reply)
                 if bn_letter not in {"A", "B", "C", "D"}:
                     raise ValueError("BN reply did not contain a valid option letter")
@@ -161,21 +162,14 @@ def evaluate_questions(
                     logging.error("Skipping question after 3 failed attempts: %s", q["question"])
                     break
 
-    if failures > 0:
-        logging.warning("Total failures: %d", failures)
-    return results
-
-        logging.info(
-            "Q%d/%d done. Baseline: %s (%s). BN: %s (%s). Remaining: %d",
-            idx,
-            len(questions),
-            baseline_letter,
-            "correct" if result["is_baseline_correct"] else "wrong",
-            bn_letter,
-            "correct" if result["is_bn_correct"] else "wrong",
-            len(questions) - idx,
-        )
-    return results
+        summary = {
+            "total": len(results),
+            "baseline_correct": sum(r["is_baseline_correct"] for r in results),
+            "bn_correct": sum(r["is_bn_correct"] for r in results),
+            "failures": failures,
+            "results": results,
+        }
+    return summary
 
 
 def load_questions(path: Path) -> List[Dict[str, Any]]:
@@ -191,19 +185,27 @@ def load_questions(path: Path) -> List[Dict[str, Any]]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate baseline vs BN Gemini models on MCQ data.")
-    parser.add_argument("input", type=Path, help="Path to JSON file with MCQ questions.")
+    parser.add_argument("in_domain", type=Path, help="Path to JSON file with in-domain MCQ questions.")
+    parser.add_argument("out_domain", type=Path, help="Path to JSON file with out-of-domain MCQ questions.")
     parser.add_argument("-o", "--output", type=Path, help="Optional output JSON path.")
+    parser.add_argument("--seed", type=int, help="Optional seed for deterministic shuffling.")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    questions = load_questions(args.input)
-    results = evaluate_questions(questions)
+    # Reduce chatter from the main app logger unless explicitly desired.
+    logging.getLogger("gemini-fastapi").setLevel(logging.WARNING)
+    in_questions = load_questions(args.in_domain)
+    out_questions = load_questions(args.out_domain)
+
+    logging.info("Evaluating in-domain set (%d questions)...", len(in_questions))
+    in_summary = evaluate_questions(in_questions, seed=args.seed)
+
+    logging.info("Evaluating out-of-domain set (%d questions)...", len(out_questions))
+    out_summary = evaluate_questions(out_questions, seed=args.seed)
 
     summary = {
-        "total": len(results),
-        "baseline_correct": sum(r["is_baseline_correct"] for r in results),
-        "bn_correct": sum(r["is_bn_correct"] for r in results),
-        "results": results,
+        "in_domain": in_summary,
+        "out_domain": out_summary,
     }
 
     if args.output:
