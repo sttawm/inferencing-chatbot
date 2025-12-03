@@ -87,49 +87,83 @@ def evaluate_questions(
     seed: int | None = None,
 ) -> List[Dict[str, Any]]:
     results: List[Dict[str, Any]] = []
+    failures = 0
     for idx, q in enumerate(questions, start=1):
-        formatted = build_question_block(q, seed=seed + idx if seed is not None else None)
-        prompt = PROMPT_TEMPLATE.format(question_block=formatted["block"])
+        if failures > 5:
+            logging.error("Aborting: more than 5 failures encountered.")
+            break
+        attempt = 0
+        while attempt < 3:
+            attempt += 1
+            try:
+                formatted = build_question_block(q, seed=seed + idx if seed is not None else None)
+                prompt = PROMPT_TEMPLATE.format(question_block=formatted["block"])
 
-        logging.info("Q%d/%d | Asking baseline: %s", idx, len(questions), q["question"])
-        baseline_body = ChatRequest(
-            messages=[Message(role="user", parts=[MessagePart(type="text", text=prompt)])],
-            tools={},
-            model=VERTEX_MODEL_ID,
-            temperature=0.2,
-            max_output_tokens=2048,
-        )
-        baseline_reply = call_gemini(baseline_body)
-        logging.info("Baseline full reply:\n%s", baseline_reply)
-        baseline_letter = parse_letter(baseline_reply)
+                logging.info("Q%d/%d (attempt %d) | Asking baseline: %s", idx, len(questions), attempt, q["question"])
+                baseline_body = ChatRequest(
+                    messages=[Message(role="user", parts=[MessagePart(type="text", text=prompt)])],
+                    tools={},
+                    model=VERTEX_MODEL_ID,
+                    temperature=0.2,
+                    max_output_tokens=2048,
+                )
+                baseline_reply = call_gemini(baseline_body)
+                logging.info("Baseline full reply:\n%s", baseline_reply)
+                baseline_letter = parse_letter(baseline_reply)
+                if baseline_letter not in {"A", "B", "C", "D"}:
+                    raise ValueError("Baseline reply did not contain a valid option letter")
 
-        logging.info("Q%d/%d | Asking BN model: %s", idx, len(questions), q["question"])
-        bn_body = ChatRequest(
-            messages=[Message(role="user", parts=[MessagePart(type="text", text=prompt)])],
-            tools={},
-            model=BN_ENHANCED_MODEL_NAME,
-            temperature=0.2,
-            max_output_tokens=2048,
-        )
-        bn_reply_full = handle_bn_enhanced_request(bn_body)
-        logging.info("BN full reply:\n%s", bn_reply_full)
-        # Extract assistant response section
-        if "Assistant response:" in bn_reply_full:
-            bn_reply = bn_reply_full.split("Assistant response:", 1)[1].strip()
-        else:
-            bn_reply = bn_reply_full.strip()
-        bn_letter = parse_letter(bn_reply)
+                logging.info("Q%d/%d (attempt %d) | Asking BN model: %s", idx, len(questions), attempt, q["question"])
+                bn_body = ChatRequest(
+                    messages=[Message(role="user", parts=[MessagePart(type="text", text=prompt)])],
+                    tools={},
+                    model=BN_ENHANCED_MODEL_NAME,
+                    temperature=0.2,
+                    max_output_tokens=2048,
+                )
+                bn_reply_full = handle_bn_enhanced_request(bn_body)
+                logging.info("BN full reply:\n%s", bn_reply_full)
+                # Extract assistant response section
+                if "Assistant response:" in bn_reply_full:
+                    bn_reply = bn_reply_full.split("Assistant response:", 1)[1].strip()
+                else:
+                    bn_reply = bn_reply_full.strip()
+                bn_letter = parse_letter(bn_reply)
+                if bn_letter not in {"A", "B", "C", "D"}:
+                    raise ValueError("BN reply did not contain a valid option letter")
 
-        result = {
-            "question": q["question"],
-            "options": formatted["letter_map"],
-            "correct_letter": formatted["correct_letter"],
-            "baseline": {"reply": baseline_reply, "letter": baseline_letter},
-            "bn": {"reply": bn_reply, "letter": bn_letter},
-            "is_baseline_correct": baseline_letter == formatted["correct_letter"],
-            "is_bn_correct": bn_letter == formatted["correct_letter"],
-        }
-        results.append(result)
+                result = {
+                    "question": q["question"],
+                    "options": formatted["letter_map"],
+                    "correct_letter": formatted["correct_letter"],
+                    "baseline": {"reply": baseline_reply, "letter": baseline_letter},
+                    "bn": {"reply": bn_reply, "letter": bn_letter},
+                    "is_baseline_correct": baseline_letter == formatted["correct_letter"],
+                    "is_bn_correct": bn_letter == formatted["correct_letter"],
+                }
+                results.append(result)
+
+                logging.info(
+                    "Q%d/%d done. Baseline: %s (%s). BN: %s (%s). Remaining: %d",
+                    idx,
+                    len(questions),
+                    baseline_letter,
+                    "correct" if result["is_baseline_correct"] else "wrong",
+                    bn_letter,
+                    "correct" if result["is_bn_correct"] else "wrong",
+                    len(questions) - idx,
+                )
+                break
+            except Exception as exc:
+                logging.warning("Q%d/%d attempt %d failed: %s", idx, len(questions), attempt, exc)
+                if attempt >= 3:
+                    failures += 1
+                    logging.error("Skipping question after 3 failed attempts: %s", q["question"])
+                    break
+
+    if failures > 0:
+        logging.warning("Total failures: %d", failures)
+    return results
 
         logging.info(
             "Q%d/%d done. Baseline: %s (%s). BN: %s (%s). Remaining: %d",
