@@ -1,0 +1,92 @@
+[
+  {
+    "question": "My periods used to be irregular, but now they’re becoming more painful and I’ve recently developed a few dark facial hairs on my jawline. Does that combination make sense as part of a single underlying condition?",
+    "correct_answer": "Yes, when irregular cycles evolve alongside androgen-driven symptoms like facial hair, PCOS may still be the primary underlying process.",
+    "incorrect_answers": [
+      "No, painful periods never occur in PCOS.",
+      "No, androgen excess only appears after menopause.",
+      "No, irregular cycles cannot shift into painful ones without a structural cause."
+    ]
+  },
+  {
+    "question": "I’ve gained weight mostly around my abdomen over the last year, even though my meals haven’t changed much. Does central obesity point more toward metabolic imbalance or adrenal imbalance?",
+    "correct_answer": "Central obesity is more strongly associated with metabolic imbalance, though adrenal dysfunction can contribute indirectly.",
+    "incorrect_answers": [
+      "It is solely caused by adrenal imbalance.",
+      "It is unrelated to both metabolic and adrenal factors.",
+      "Central obesity always indicates thyroid dysfunction instead."
+    ]
+  },
+  {
+    "question": "My cortisol levels seem to spike unpredictably when I’m under stress, and my sleep quality suffers only during those weeks. Does that pattern suggest adrenal dysregulation?",
+    "correct_answer": "Yes, stress-reactive cortisol instability paired with sleep disruption is consistent with adrenal imbalance patterns.",
+    "incorrect_answers": [
+      "No, adrenal imbalance is unrelated to stress.",
+      "No, cortisol fluctuations can only occur with perimenopause.",
+      "No, sleep disruption cannot be linked to cortisol."
+    ]
+  },
+  {
+    "question": "If my mother and two sisters have PCOS but my cycles are regular, could hormonal imbalance still be present even without classic irregular periods?",
+    "correct_answer": "Yes, hormonal imbalance can manifest without irregular cycles, especially when there is a strong family history of PCOS.",
+    "incorrect_answers": [
+      "No, PCOS cannot occur without irregular periods.",
+      "No, family history has no correlation.",
+      "No, hormone imbalance requires both weight gain and irregular cycles."
+    ]
+  },
+  {
+    "question": "I’ve been tracking my progesterone and estrogen and they fluctuate widely mid-cycle. Am I correct that this variability might contribute to mood symptoms even if my cycles are predictable?",
+    "correct_answer": "Yes, mid-cycle hormonal variability can contribute to mood issues even when cycle timing is consistent.",
+    "incorrect_answers": [
+      "No, mood symptoms only result from stable but low hormone levels.",
+      "No, hormone fluctuations mid-cycle are irrelevant.",
+      "No, mood symptoms occur only during the luteal phase."
+    ]
+  },
+  {
+    "question": "My libido dropped at the same time I started having mild vaginal dryness, but I’m only 41. Could early perimenopause explain both at once?",
+    "correct_answer": "Yes, early perimenopause can cause both declining libido and vaginal dryness through fluctuating estrogen levels.",
+    "incorrect_answers": [
+      "No, perimenopause never begins before age 50.",
+      "No, libido changes and dryness must come from unrelated causes.",
+      "No, vaginal dryness only appears after menstruation stops completely."
+    ]
+  },
+  {
+    "question": "If I feel wired at night but exhausted in the morning, is that pattern more typical of adrenal imbalance or metabolic imbalance?",
+    "correct_answer": "That pattern is more characteristic of adrenal imbalance, particularly with inverted cortisol rhythms.",
+    "incorrect_answers": [
+      "It more strongly indicates a metabolic imbalance.",
+      "It always indicates iron deficiency.",
+      "It is typical only of sleep apnea."
+    ]
+  },
+  {
+    "question": "If I cut out high–blood-sugar–spiking foods but don’t see improvement in weight or energy, does that argue against metabolic imbalance as the primary issue?",
+    "correct_answer": "Not necessarily—metabolic imbalance can persist despite dietary changes, especially when cortisol or sleep quality are contributing.",
+    "incorrect_answers": [
+      "Yes, dietary changes fully resolve metabolic imbalance 100% of the time.",
+      "Yes, diet alone determines metabolic status.",
+      "Yes, metabolic imbalance cannot exist without high sugar intake."
+    ]
+  },
+  {
+    "question": "I started journaling during times of severe stress and noticed fewer emotional spikes even though my hormones are still fluctuating. Does journaling help with stress-related hormone imbalance?",
+    "correct_answer": "Yes, journaling can reduce stress reactivity and indirectly help stabilize hormone imbalance patterns.",
+    "incorrect_answers": [
+      "No, journaling has no effect on hormone regulation.",
+      "Journaling only helps with sleep disorders, not stress.",
+      "It only works if cortisol levels are already normal."
+    ]
+  },
+  {
+    "question": "If I have irregular periods but normal estrogen levels, could progesterone still be the main hormone driving the cycle disruption?",
+    "correct_answer": "Yes, progesterone insufficiency or variability can cause irregular periods even when estrogen levels look normal.",
+    "incorrect_answers": [
+      "No, progesterone cannot affect cycle timing.",
+      "No, estrogen is always the sole regulator of cycles.",
+      "Irregular periods always indicate excess testosterone instead."
+    ]
+  }
+]

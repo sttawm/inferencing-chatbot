@@ -1,0 +1,92 @@
+[
+  {
+    "question": "I had a copper IUD placed three years ago, and recently I’ve developed heavier bleeding and intermittent cramping. Does this suggest a malpositioned IUD?",
+    "correct_answer": "Yes, new heavy bleeding and cramping several years after insertion can indicate IUD malposition or partial expulsion.",
+    "incorrect_answers": [
+      "No, IUD malposition only occurs within the first month.",
+      "No, copper IUDs never cause changes in bleeding patterns.",
+      "No, this always suggests endometriosis instead."
+    ]
+  },
+  {
+    "question": "I’m 12 weeks pregnant and experiencing episodes of near-fainting after standing up quickly. Could this be normal hemodynamic change rather than pathology?",
+    "correct_answer": "Yes, first-trimester blood pressure shifts and increased volume demands can cause orthostatic symptoms without underlying pathology.",
+    "incorrect_answers": [
+      "No, fainting always indicates gestational diabetes.",
+      "No, orthostatic symptoms cannot occur in pregnancy.",
+      "No, faintness only appears in the third trimester."
+    ]
+  },
+  {
+    "question": "I’m breastfeeding and developed a red, wedge-shaped area on my breast with fever. Does this pattern specifically indicate infectious mastitis rather than blocked ducts?",
+    "correct_answer": "Yes, systemic symptoms and a wedge-shaped erythematous area strongly suggest infectious mastitis.",
+    "incorrect_answers": [
+      "No, infectious mastitis never causes fever.",
+      "No, blocked ducts always cause fever first.",
+      "No, mastitis only appears if breastfeeding stops abruptly."
+    ]
+  },
+  {
+    "question": "My gynecologist said my Pap smear showed ASC-US with a positive high-risk HPV test. Am I correct that the next step is usually colposcopy?",
+    "correct_answer": "Yes, ASC-US with high-risk HPV positivity typically warrants colposcopy.",
+    "incorrect_answers": [
+      "No, ASC-US always requires immediate surgery.",
+      "No, HPV positivity means annual follow-up only.",
+      "No, colposcopy is only required if the Pap is completely normal."
+    ]
+  },
+  {
+    "question": "I have cyclic pelvic pain that worsens during intercourse and mildly improves with NSAIDs. Could this triad fit early-stage endometriosis?",
+    "correct_answer": "Yes, cyclic pain with dyspareunia and partial NSAID relief is consistent with early endometriosis.",
+    "incorrect_answers": [
+      "No, endometriosis pain never responds to NSAIDs at all.",
+      "No, endometriosis only occurs after menopause.",
+      "No, pain during intercourse rules out endometriosis."
+    ]
+  },
+  {
+    "question": "I’ve had two miscarriages and my doctor wants to test for antiphospholipid antibodies. Are these typically linked to recurrent pregnancy loss?",
+    "correct_answer": "Yes, antiphospholipid syndrome is a known cause of recurrent pregnancy loss.",
+    "incorrect_answers": [
+      "No, antiphospholipid antibodies only cause PCOS.",
+      "No, recurrent loss is always due to structural abnormalities.",
+      "No, these antibodies only affect thyroid function."
+    ]
+  },
+  {
+    "question": "I’m 35 weeks pregnant and suddenly developed severe itching on my palms and soles. Does this pattern raise concern for cholestasis of pregnancy?",
+    "correct_answer": "Yes, pruritus of the palms and soles in late pregnancy is a classic sign of intrahepatic cholestasis.",
+    "incorrect_answers": [
+      "No, cholestasis only causes abdominal pain.",
+      "No, itching cannot be related to liver function.",
+      "No, this is only caused by normal skin stretching."
+    ]
+  },
+  {
+    "question": "I was told my fetus is measuring small for gestational age and Doppler studies of the umbilical artery are abnormal. Is this pattern typical of placental insufficiency?",
+    "correct_answer": "Yes, fetal growth restriction with abnormal Dopplers classically suggests placental insufficiency.",
+    "incorrect_answers": [
+      "No, Dopplers have no diagnostic role in pregnancy.",
+      "No, small fetal size always indicates genetic syndromes and not the placenta.",
+      "No, placental insufficiency only appears during labor."
+    ]
+  },
+  {
+    "question": "I’m 28 and have irregular bleeding after intercourse. Could cervical ectropion explain this without implying malignancy?",
+    "correct_answer": "Yes, cervical ectropion can cause postcoital bleeding in younger patients without malignancy.",
+    "incorrect_answers": [
+      "No, postcoital bleeding always means cancer.",
+      "No, ectropion cannot cause bleeding.",
+      "No, ectropion only appears after menopause."
+    ]
+  },
+  {
+    "question": "At my ultrasound, the sonographer noted a 'complex ovarian cyst' with septations. Am I right that these features increase suspicion for neoplasm compared to a simple cyst?",
+    "correct_answer": "Yes, complex morphology such as septations raises suspicion for neoplasm relative to a simple unilocular cyst.",
+    "incorrect_answers": [
+      "No, cyst complexity has no significance.",
+      "No, all ovarian cysts are benign regardless of ultrasound features.",
+      "No, septated cysts always indicate infection instead."
+    ]
+  }
+]
