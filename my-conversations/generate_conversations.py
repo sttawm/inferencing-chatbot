@@ -40,9 +40,25 @@ def load_env() -> None:
 def process_json(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Optional place to normalize/clean the input JSON.
-    Currently a pass-through.
+    Combine todos, messages, visit_notes, and qas into one list with a
+    "type" field and sort chronologically (oldest first) by key "t".
     """
-    return payload
+    combined: List[Dict[str, Any]] = []
+
+    for key in ("todos", "messages", "visit_notes", "qas"):
+        items = payload.get(key, [])
+        if not isinstance(items, list):
+            raise ValueError(f"Expected list for key '{key}', got {type(items)}")
+        for item in items:
+            if not isinstance(item, dict):
+                raise ValueError(f"Expected dict items in list for key '{key}', got {type(item)}")
+
+            entry = dict(item)
+            entry.setdefault("type", key)
+            combined.append(entry)
+
+    combined.sort(key=lambda item: item.get("t", 0))
+    return combined
 
 
 def get_prompt(processed_payload: Dict[str, Any]) -> str:
@@ -166,12 +182,13 @@ GENERAL RULES
   { "user": "patient" or "clinic", "text": "..." }
 - Respond ONLY with this JSON array, with no additional explanation or formatting.
 
-Attached JSON:
+Attached JSON:""" + f"""
 {json.dumps(processed_payload, ensure_ascii=False, indent=2)}
-    """
+"""
 
 
 def query_llm(prompt: str, payload: Dict[str, Any], model_id: str = "gemini-2.5-pro") -> str:
+    logger.info("Full prompt being sent to LLM:\n%s", prompt)
     model = GenerativeModel(model_id)
     response = model.generate_content(
         [
@@ -184,10 +201,12 @@ def query_llm(prompt: str, payload: Dict[str, Any], model_id: str = "gemini-2.5-
             )
         ],
         generation_config={
-            "temperature": 0.2
+            "temperature": 0.2,
+            "max_output_tokens": 10000,
         },
     )
     text = (response.text or "").strip()
+    logger.info("Raw LLM response:\n%s", text)
     if not text:
         raise RuntimeError("LLM returned an empty response")
     return text
@@ -217,11 +236,20 @@ def parse_conversation_response(text: str) -> List[Dict[str, str]]:
     return [{"role": "assistant", "text": text}]
 
 
-def process_file(input_path: Path, output_path: Optional[Path]) -> None:
+def process_file(
+    input_path: Path,
+    output_path: Optional[Path],
+    limit: Optional[int],
+    start_index: Optional[int],
+) -> None:
     results: List[str] = []
+    logger.info("Opening input file: %s", input_path)
 
+    processed_counter = 0  # counts only non-empty message arrays
     with input_path.open("r", encoding="utf-8") as f:
         for line_no, line in enumerate(f, start=1):
+            if limit is not None and len(results) >= limit:
+                break
             line = line.strip()
             if not line:
                 continue
@@ -232,11 +260,20 @@ def process_file(input_path: Path, output_path: Optional[Path]) -> None:
                 continue
 
             processed = process_json(payload)
+            if not processed:
+                logger.info("Line %d skipped because messages array is empty.", line_no)
+                continue
+
+            if start_index is not None and processed_counter < start_index:
+                processed_counter += 1
+                continue
+
             prompt = get_prompt(processed)
             llm_text = query_llm(prompt, processed)
             conversation = parse_conversation_response(llm_text)
 
             results.append(json.dumps({"input": payload, "conversation": conversation}, ensure_ascii=False))
+            processed_counter += 1
 
     if output_path:
         output_path.write_text("\n".join(results), encoding="utf-8")
@@ -250,12 +287,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate fake conversations from JSONL using Gemini.")
     parser.add_argument("input", type=Path, help="Path to input JSONL file")
     parser.add_argument("-o", "--output", type=Path, help="Optional output path (JSONL). Defaults to stdout.")
+    parser.add_argument("-n", "--limit", type=int, help="Process only the first N records.")
+    parser.add_argument(
+        "-s",
+        "--start",
+        type=int,
+        help="Skip to this zero-based line index before processing.",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     load_env()
 
-    process_file(args.input, args.output)
+    process_file(args.input, args.output, args.limit, args.start)
 
 
 if __name__ == "__main__":
