@@ -1,6 +1,6 @@
 from womens_health import BN_VARIABLES_DICT
 
-SIMPLE_PROMPT = """
+SIMPLE_QUALITATIVE_PROMPT = """
 You are speaking on behalf of an ObGyn clinic, and you are assisting a user based on the following conversation and
 probabilistic insights derived from a Bayesian network.
 
@@ -9,15 +9,34 @@ Use your own knowledge and the provided probabilities to craft a helpful respons
 Conversation:
 {conversation}
 
-Node updates:
+Evidence:
 {updates_text}
 
-Updated probabilities:
+Probabilistic insights:
 {probability_text}
 
 Instead of referencing exact probabilities, use qualitative terms like "likely", "unlikely", "possible", or "rare" to convey the information.
 
 The user doesn't know about this Bayesian network analysis; integrate the insights naturally into your response as if you are responding directly to the user.
+
+Provide a thoughtful reply. Finish your answer completely and naturally."""
+
+SIMPLE_QUANTITATIVE_PROMPT = """
+You are speaking on behalf of an ObGyn clinic, and you are assisting a user based on the following conversation and
+probabilistic insights derived from a Bayesian network.
+
+Use your own knowledge and the provided probabilities to craft a helpful response. 
+
+Conversation:
+{conversation}
+
+Evidence:
+{updates_text}
+
+Probabilistic insights:
+{probability_text}
+
+The user doesn't know about this Bayesian network analysis; integrate the insights naturally into your response as if you are responding directly to the user. Feel free to reference the probabilities explicitly.
 
 Provide a thoughtful reply. Finish your answer completely and naturally."""
 
@@ -178,8 +197,8 @@ def make_probability_prompt(
     probability_text: str,
 ) -> str:
     """Compose the second-stage prompt that injects BN context."""
-    return SIMPLE_PROMPT.format(
+    return SIMPLE_QUANTITATIVE_PROMPT.format(
         conversation=conversation,
-        updates_text=updates_text,
-        probability_text=probability_text,
+        updates_text=f"{updates_text}",
+        probability_text=f"{probability_text}",
     )

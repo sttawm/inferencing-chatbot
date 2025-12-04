@@ -65,136 +65,169 @@ def get_prompt(processed_payload: Dict[str, Any]) -> str:
     return """
 Convert the attached JSON to a conversation between an ObGyn clinician and a patient.
 
-The attached JSON is an array of objects representing a chronologically ordered list of interactions between a single patient and an ObGyn clinic. Preserve the chronological ordering.
+The attached JSON is an array of objects representing a chronologically ordered list of interactions between a single patient and an ObGyn clinic. Preserve the chronological ordering exactly.
 
-There are four types of interaction, given by the top-level “type” field of each object: “questionnaire”, “visit note”, “todo”, or “message”.
-
-Your job is to convert all of these into a list of conversational turns.
+Your job is to convert all objects into a list of conversational turns.
 
 Each conversational turn in the output MUST be a JSON object of the form:
 { “user”: “patient” or “clinic”, “text”: “…” }
 
-The final output MUST be a JSON array of these objects, for example:
+The final output MUST be a JSON array of these objects.
+
+Do NOT include any other keys.
+Do NOT include comments.
+Respond ONLY with the JSON array.
+
+After generating all turns, merge any consecutive messages from the same user into a single conversational turn by concatenating their text with a space between them.
+
+⸻
+
+COMPLETE INPUT SCHEMA EXAMPLE (PSEUDO-JSON WITH COMMENTS)
+
+This is an illustrative example of the full incoming structure (not for output):
+
 [
-{ “user”: “clinic”, “text”: “…” },
-{ “user”: “patient”, “text”: “…” }
-]
-
-Do NOT include any other keys. Do NOT include any explanations or comments. Respond ONLY with JSON.
-
-⸻
-
-DETAILS OF INPUT TYPES
-
-⸻
-
-1. Questionnaire objects
-
-An object of type “questionnaire” looks like:
 {
 “type”: “questionnaire”,
-“question”: “…”,
-“answer”: “…”
-}
-
-Convert this into two conversational turns:
-	•	A clinic turn that asks the question.
-	•	A patient turn giving the answer.
-
-Important rule:
-If the “question” text is phrased as a statement (e.g. “Smoking status”, “Period frequency”, “Mood issues”), you MUST convert it into a natural-sounding question that captures the intended meaning (e.g. “Can you tell me about your smoking status?”, “How often do you get your period?”, “Have you been experiencing any mood issues?”).
-Do NOT leave it as a statement. All questionnaire items must be rendered as genuine questions.
-Keep the meaning as close as possible.
-
-Use natural language but stay faithful to the intent of the original question and answer.
-
-⸻
-
-2. Visit note objects
-
-An object of type “visit note” looks like:
+“question”: “Smoking status”,
+“answer”: “Occasional smoker”
+},
+{
+“type”: “message”,
+“user_role”: “patient”,
+“text”: “I’m having mild cramps.”
+},
 {
 “type”: “visit note”,
 “checklists”: {
-“pe”: { },
-“ros”: { }
+“pe”: [
+{ “name”: “Abdom”, “value”: “Soft, tender LLQ” },
+{ “name”: “Breast”, “value”: “Normal exam” }
+],
+“ros”: [
+{ “name”: “GI”, “value”: “Intermittent cramping” },
+{ “name”: “General”, “value”: “No fever, no chills” }
+]
 },
-“bullets”: []
+“bullets”: [
+{
+“category”: “Hpi”,
+“text”: “Patient reports 3 days of intermittent cramping.”
+},
+{
+“category”: “Plan”,
+“text”: “”,
+“note_document”: {
+“summary”: “Recommend ibuprofen as needed and monitor symptoms.”
 }
-
-The elements of “pe” and “ros” are objects of the form:
-{ “name”: “…”, “value”: “…” }
-
-The possible names for “pe” are:
-General, Neck, Resp, CVS, Abdom, MSS, NS, Skin, Psych, Pelvic, Rectal, Eyes, HENT, Breast, GU.
-
-The possible names for “ros” are:
-General, Eyes, Resp, CVS, GI, GU, NS, HENT, MSS, Skin, Gyne, Psych, Diet, Exercise, Breast, Hemo, Endoc.
-
-The elements of “bullets” are of the form:
-{ “category”: “…”, “text”: “…”, … }
-
-The possible categories are:
-Allergies, Assessment, Assessplan, Data, Family, Followup, Habits, Hpi, Instr, Med, Narrative, Objective, Orders, PE, Past, Plan, Problem, Procedure, ROS, Reason, Referenced, Social, Surgical, Test, Tx.
-
-If a bullet has an empty or missing “text” but has “note_document.summary” (e.g.
-{ “category”: “…”, “text”: “”, “note_document”: { “summary”: “…” } }),
-then use “note_document.summary”. If both are present, pick either one.
-
-Convert a “visit note” into a small number of conversational turns that summarize:
-	•	What the patient reported (history, ROS).
-	•	What the clinician found or did (PE, procedures, tests).
-	•	The plan, recommendations, and follow-up.
-
-Use clear conversational language, combining related checklist items and bullets into coherent sentences. Attribute these turns to:
-{ “user”: “clinic”, “text”: “…” }
-unless it is clearly something the patient said in their own words.
-
-⸻
-
-3. Todo objects
-
-A “todo” object looks like:
+}
+]
+},
 {
 “type”: “todo”,
-“title”: “Low Libido”,
+“title”: “Hydration”,
 “category”: “read”,
-“description”: “Low libido can have…”
+“description”: “Hydration can help reduce cramping.”
 }
-
-Convert this into a clinic message to the patient that briefly explains the todo item and, if relevant, references the “description”. For example, it might sound like an instruction or recommendation from the clinic.
-
-Output as:
-{ “user”: “clinic”, “text”: “…” }
+]
 
 ⸻
 
-4. Message objects
+HOW TO CONVERT EACH TYPE
+	1.	Questionnaire objects
 
-A “message” object looks like:
-{
-“type”: “message”,
-“user_role”: “patient” or “careguide” or “provider” or “admin”,
+A questionnaire entry has “type”: “questionnaire”, plus “question” and “answer”.
+
+Convert into two turns:
+{ “user”: “clinic”, “text”: “<converted question?>” }
+{ “user”: “patient”, “text”: “” }
+
+Important rule: If the question field is a noun-phrase or statement (e.g. “Smoking status”, “Period frequency”, “Mood issues”), convert it into a real natural-sounding question, such as:
+“Can you tell me about your smoking status?”
+“How often do you get your period?”
+“Have you been experiencing any mood issues?”
+
+Preserve meaning faithfully.
+
+⸻
+
+	2.	Visit note objects
+
+A visit note has the following structure:
+“type”: “visit note”
+“checklists”: { “pe”: […], “ros”: […] }
+“bullets”: […]
+
+Convert the entire visit note into a small number of clinic-authored conversational messages summarizing:
+– What the patient reported (history, ROS, HPI)
+– What the clinician found (physical exam, procedures, tests)
+– The plan, recommendations, and follow-up
+
+Checklist items:
+Each PE or ROS element is an object containing “name” and “value”.
+PE example names: General, Neck, Resp, CVS, Abdom, MSS, NS, Skin, Psych, Pelvic, Rectal, Eyes, HENT, Breast, GU.
+ROS example names: General, Eyes, Resp, CVS, GI, GU, NS, HENT, MSS, Skin, Gyne, Psych, Diet, Exercise, Breast, Hemo, Endoc.
+
+Bullets:
+Each bullet contains “category” and “text”.
+Some bullets may have empty or missing text but include a note_document.summary field.
+If text is empty and note_document.summary exists, use the summary as the content.
+If both text and summary exist, either may be used, but prefer the clearer one.
+
+All visit-note turns must be attributed to “clinic”, unless a bullet explicitly contains direct patient quotes.
+
+⸻
+
+	3.	Todo objects
+
+A todo object contains:
+“type”: “todo”
+“title”: “…”
+“category”: “…”
+“description”: “…”
+
+Convert this into a single clinic message that briefly explains or recommends the task. Always attribute it to user “clinic”.
+
+⸻
+
+	4.	Message objects
+
+A message object contains:
+“type”: “message”
+“user_role”: “patient” or “provider” or “careguide” or “admin”
 “text”: “…”
-}
 
-Map “user_role” to the “user” field as follows:
-	•	If user_role == “patient”, then user = “patient”.
-	•	For “careguide”, “provider”, or “admin”, set user = “clinic”.
+Map user_role to user:
+patient → “patient”
+provider, careguide, admin → “clinic”
 
-Keep the “text” as the content of the turn, with minimal, neutral cleanup if needed.
+Keep text as the message content with minimal cleanup.
+
+⸻
+
+FINAL PROCESSING STEP (IMPORTANT)
+
+After generating all turns, merge any consecutive turns by the same user into a single turn.
+For example:
+{ “user”: “patient”, “text”: “Hello” }
+{ “user”: “patient”, “text”: “I have a question” }
+
+Becomes:
+{ “user”: “patient”, “text”: “Hello I have a question” }
+
+This merging happens at the very end.
 
 ⸻
 
 GENERAL RULES
-	•	Preserve the chronological order of the input array.
-	•	Do not invent facts that conflict with the input, but you may add brief connecting phrases to make the conversation flow naturally.
-	•	Keep the medical content accurate, but you may simplify clinical jargon into patient-friendly language.
-	•	All output must be a single JSON array of objects of the form:
-{ “user”: “patient” or “clinic”, “text”: “…” }
-	•	Respond ONLY with this JSON array.
 
-⸻
+Preserve chronological order.
+Do not contradict the input.
+You may add brief conversational transitions like “Thanks for sharing that,” but do not invent medical findings.
+Output must be a JSON array containing only objects of the form:
+{ “user”: “patient” or “clinic”, “text”: “…” }
+
+Respond ONLY with the JSON array.
 
 Attached JSON:""" + f"""
 {json.dumps(processed_payload, ensure_ascii=False, indent=2)}
@@ -231,6 +264,21 @@ def parse_conversation_response(text: str) -> List[Dict[str, str]]:
     Tries to parse the LLM output as a JSON list of {role, text} dicts.
     Falls back to wrapping raw text in a single-message list.
     """
+
+    def _extract_first_json_array(s: str) -> str:
+        start = s.find("[")
+        if start == -1:
+            return s
+        depth = 0
+        for idx in range(start, len(s)):
+            if s[idx] == "[":
+                depth += 1
+            elif s[idx] == "]":
+                depth -= 1
+                if depth == 0:
+                    return s[start : idx + 1]
+        return s
+
     stripped = text.strip()
     if stripped.startswith("```"):
         # Attempt to extract fenced JSON
@@ -244,23 +292,36 @@ def parse_conversation_response(text: str) -> List[Dict[str, str]]:
         elif start_bracket != -1 and end_bracket != -1 and end_bracket > start_bracket:
             stripped = stripped[start_bracket : end_bracket + 1].strip()
 
-    try:
-        data = json.loads(stripped)
-        if isinstance(data, list):
-            messages: List[Dict[str, str]] = []
-            for item in data:
-                if not isinstance(item, dict):
-                    continue
-                role = item.get("role")
-                msg_text = item.get("text")
-                if role in {"patient", "clinician"} and isinstance(msg_text, str):
-                    messages.append({"role": role, "text": msg_text})
-            if messages:
-                return messages
-    except json.JSONDecodeError:
-        logger.warning("Failed to parse LLM response as JSON. Response was:\n%s", text)
-    return [{"role": "assistant", "text": text}]
+    def _parse_json(json_str: str) -> List[Dict[str, str]]:
+        data = json.loads(json_str)
+        if not isinstance(data, list):
+            raise ValueError("Expected a JSON list at the top level")
+        messages: List[Dict[str, str]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                raise ValueError("Expected list items to be JSON objects")
+            role = item.get("role")
+            msg_text = item.get("text")
+            if role in {"patient", "clinician"} and isinstance(msg_text, str):
+                messages.append({"role": role, "text": msg_text})
+            else:
+                raise ValueError("Each message must have 'role' and 'text' fields")
+        return messages
 
+    try:
+        return _parse_json(stripped)
+    except json.JSONDecodeError:
+        # Attempt to slice out first JSON array if extra text surrounds it
+        candidate = _extract_first_json_array(stripped)
+        try:
+            return _parse_json(candidate.strip())
+        except Exception as exc:
+            logger.warning("Bracket-sliced parse failed: %s", exc)
+        logger.warning("Failed to parse LLM response as JSON. Response was:\n%s", text)
+        raise ValueError("Failed to parse LLM response as JSON.")
+    except Exception as exc:
+        logger.warning("Failed to parse LLM response as JSON. Response was:\n%s", text)
+        raise ValueError(f"Failed to parse LLM response: {exc}")
 
 def process_file(
     input_path: Path,
@@ -273,41 +334,57 @@ def process_file(
 
     processed_counter = 0  # counts non-empty processed records seen (including skipped by start)
     output_counter = 0  # counts conversations actually generated
-    with input_path.open("r", encoding="utf-8") as f:
-        for line_no, line in enumerate(f, start=1):
+
+    raw_text = input_path.read_text(encoding="utf-8")
+    stripped = raw_text.lstrip()
+
+    if stripped.startswith("["):
+        try:
+            payloads = json.loads(raw_text)
+            if not isinstance(payloads, list):
+                raise ValueError("Top-level JSON is not a list")
+            records = list(enumerate(payloads, start=1))
+        except Exception as exc:
+            logger.error("Input file is not valid JSON array: %s", exc)
+            return
+    else:
+        records = []
+        for line_no, line in enumerate(raw_text.splitlines(), start=1):
             line = line.strip()
             if not line:
                 continue
             try:
-                payload = json.loads(line)
+                records.append((line_no, json.loads(line)))
             except json.JSONDecodeError as exc:
                 logger.error("Line %d is not valid JSON: %s", line_no, exc)
                 continue
 
-            processed = process_json(payload)
-            if not processed:
-                logger.info("Line %d skipped because messages array is empty.", line_no)
-                continue
+    for line_no, payload in records:
+        processed = process_json(payload)
 
-            if start_index is not None and processed_counter < start_index:
-                processed_counter += 1
-                continue
+        if not processed:
+            logger.info("Line %d skipped because messages array is empty.", line_no)
+            continue
 
-            prompt = get_prompt(processed)
-            llm_text = query_llm(prompt, processed)
-            conversation = parse_conversation_response(llm_text)
-
+        if start_index is not None and processed_counter < start_index:
             processed_counter += 1
-            if limit is not None and output_counter >= limit:
-                break
-            record = {
-                "input": payload,
-                "conversation": conversation,
-            }
-            out_path = output_dir / f"conversation_{processed_counter:04d}.json"
-            out_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-            output_counter += 1
-            logger.info("Wrote conversation %d to %s", output_counter, out_path)
+            continue
+
+        prompt = get_prompt(processed)
+        llm_text = query_llm(prompt, processed)
+        conversation = parse_conversation_response(llm_text)
+
+        processed_counter += 1
+        if limit is not None and output_counter >= limit:
+            break
+        record = {
+            "input": processed,
+            "output": conversation,
+        }
+        out_path = output_dir / f"conversation_{processed_counter:04d}.json"
+        out_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+        output_counter += 1
+        logger.info("Wrote conversation %d to %s", output_counter, out_path)
 
 
 def main() -> None:

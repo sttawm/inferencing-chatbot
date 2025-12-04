@@ -1,0 +1,191 @@
+[
+  {
+    "patient_id": "p1",
+    "messages": [
+      {
+        "t": 1,
+        "user_role": "patient",
+        "text": "I've had irregular periods lately."
+      },
+      {
+        "t": 2,
+        "user_role": "clinic",
+        "text": "When did this start and do you have any other symptoms?"
+      }
+    ],
+    "todos": [
+      {
+        "t": 3,
+        "title": "Track cycles",
+        "description": "Track cycle dates and symptoms for 3 months."
+      }
+    ],
+    "visit_notes": [
+      {
+        "t": 4,
+        "type": "visit note",
+        "checklists": {
+          "pe": [
+            {
+              "name": "General",
+              "value": "Well-appearing"
+            },
+            {
+              "name": "Abdom",
+              "value": "Soft, non-tender"
+            }
+          ],
+          "ros": [
+            {
+              "name": "Gyne",
+              "value": "Irregular cycles"
+            },
+            {
+              "name": "Endoc",
+              "value": "Mild weight gain"
+            }
+          ]
+        },
+        "bullets": [
+          {
+            "category": "Hpi",
+            "text": "Irregular cycles for ~3 months"
+          },
+          {
+            "category": "Plan",
+            "text": "Track cycles; consider hormone labs if persists"
+          }
+        ]
+      }
+    ],
+    "qas": [
+      {
+        "t": 5,
+        "question": "Any weight changes?",
+        "answer": "Gained ~5 lbs"
+      }
+    ]
+  },
+  {
+    "patient_id": "p2",
+    "messages": [
+      {
+        "t": 1,
+        "user_role": "patient",
+        "text": "High stress and poor sleep lately."
+      },
+      {
+        "t": 2,
+        "user_role": "clinic",
+        "text": "Any changes in mood or energy?"
+      }
+    ],
+    "todos": [
+      {
+        "t": 3,
+        "title": "Sleep hygiene",
+        "description": "Try consistent bedtime and reduce screen time"
+      }
+    ],
+    "visit_notes": [
+      {
+        "t": 4,
+        "type": "visit note",
+        "checklists": {
+          "pe": [
+            {
+              "name": "Psych",
+              "value": "Anxious affect"
+            }
+          ],
+          "ros": [
+            {
+              "name": "Sleep",
+              "value": "Difficulty falling asleep"
+            },
+            {
+              "name": "General",
+              "value": "Fatigue"
+            }
+          ]
+        },
+        "bullets": [
+          {
+            "category": "Hpi",
+            "text": "High stress; trouble sleeping"
+          },
+          {
+            "category": "Plan",
+            "text": "Sleep hygiene; stress reduction techniques"
+          }
+        ]
+      }
+    ],
+    "qas": [
+      {
+        "t": 5,
+        "question": "Caffeine intake?",
+        "answer": "2 coffees/day"
+      }
+    ]
+  },
+  {
+    "patient_id": "p3",
+    "messages": [
+      {
+        "t": 1,
+        "user_role": "patient",
+        "text": "Experiencing hot flashes and mood swings."
+      },
+      {
+        "t": 2,
+        "user_role": "clinic",
+        "text": "How often are the hot flashes and when did they start?"
+      }
+    ],
+    "todos": [
+      {
+        "t": 3,
+        "title": "Symptom log",
+        "description": "Log timing and triggers for hot flashes and mood changes."
+      }
+    ],
+    "visit_notes": [
+      {
+        "t": 4,
+        "type": "visit note",
+        "checklists": {
+          "pe": [
+            {
+              "name": "General",
+              "value": "Comfortable"
+            }
+          ],
+          "ros": [
+            {
+              "name": "Gyne",
+              "value": "Hot flashes, mood swings"
+            }
+          ]
+        },
+        "bullets": [
+          {
+            "category": "Hpi",
+            "text": "Hot flashes for 2 months, mood variability"
+          },
+          {
+            "category": "Plan",
+            "text": "Track symptoms; discuss perimenopause management options"
+          }
+        ]
+      }
+    ],
+    "qas": [
+      {
+        "t": 5,
+        "question": "Family history of perimenopause symptoms?",
+        "answer": "Mother had early perimenopause"
+      }
+    ]
+  }
+]

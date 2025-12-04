@@ -470,7 +470,7 @@ def prepare_bn_analysis(body: ChatRequest) -> Tuple[ChatRequest, str, str, str, 
     bn_message = make_probability_prompt(
         conversation=conversation,
         updates_text=updates_text,
-        probability_text=probability_text,
+        probability_text=json.dumps(probabilities, indent=2),
     )
 
     analysis_messages = list(body.messages)
