@@ -74,12 +74,13 @@ def build_question_block(question_obj: Dict[str, Any], seed: int | None = None) 
 
 
 def parse_letter(response_text: str) -> str:
-    for ch in response_text:
-        if ch.upper() in {"A", "B", "C", "D"}:
-            return ch.upper()
-        else:
-            raise ValueError("Response is not a valid answer letter. Response was:\n" + response_text)
-    raise ValueError("Response is empty. Response was:\n" + response_text)
+    text = response_text.strip()
+    if not text:
+        raise ValueError("Response is empty. Response was:\n" + response_text)
+    first = text[0].upper()
+    if first in {"A", "B", "C", "D"} and (len(text) == 1 or text[1] in {" ", "\n"}):
+        return first
+    raise ValueError("Response is not a valid answer letter. Response was:\n" + response_text)
 
 
 def evaluate_questions(

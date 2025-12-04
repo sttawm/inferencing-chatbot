@@ -1,0 +1,164 @@
+[
+  {
+    "question": "I’m 11 weeks pregnant and have started having intermittent right-sided pelvic pain that never lasts more than a few seconds and doesn’t worsen with movement. My ultrasound showed a normal intrauterine pregnancy with appropriate cardiac activity but also noted a small corpus luteum cyst. Could this brief, non-progressive pain still be explained by the corpus luteum rather than something more concerning like an early appendiceal process?",
+    "correct_answer": "Yes, because corpus luteum cysts commonly cause brief, self-limited unilateral pelvic discomfort in early pregnancy.",
+    "incorrect_answers": [
+      "Yes, but only if the cyst measures over 4 cm.",
+      "No, because corpus luteum cysts do not cause any pain in pregnancy.",
+      "No, because any right-sided pain in pregnancy primarily indicates appendiceal disease."
+    ]
+  },
+  {
+    "question": "My Pap smear showed ASC-US and my HPV test came back negative. My provider said that I could return to routine screening rather than undergoing colposcopy. Is this lower-risk recommendation consistent with current cervical cancer screening guidelines?",
+    "correct_answer": "Yes, because ASC-US with negative HPV testing is generally considered low risk and often managed with routine screening intervals.",
+    "incorrect_answers": [
+      "Yes, but only if the Pap smear was repeated within two weeks.",
+      "No, because all ASC-US results require immediate colposcopy.",
+      "No, because ASC-US automatically indicates high-risk HPV involvement."
+    ]
+  },
+  {
+    "question": "At 28 weeks pregnant, my fetus is measuring slightly behind on fundal height, but the estimated fetal weight remains above the 20th percentile. My Doppler studies were normal and my fluid levels were adequate. Could this mild fundal discrepancy simply be due to maternal habitus rather than early fetal growth restriction?",
+    "correct_answer": "Yes, because fundal height can vary with maternal anatomy even when fetal biometry and Dopplers are reassuring.",
+    "incorrect_answers": [
+      "Yes, but only if the placenta is posterior.",
+      "No, because any reduction in fundal height mandates a diagnosis of FGR.",
+      "No, because Dopplers cannot rule out growth restriction."
+    ]
+  },
+  {
+    "question": "Since giving birth, I’ve developed a painful, warm, triangular region of redness on my left breast that points toward the nipple, and I also feel feverish. Could this wedge-shaped erythema indicate infectious mastitis rather than a simple clogged duct?",
+    "correct_answer": "Yes, because systemic symptoms and wedge-shaped erythema are classic for infectious mastitis.",
+    "incorrect_answers": [
+      "Yes, but only when nipple trauma is present.",
+      "No, because clogged ducts typically cause systemic symptoms first.",
+      "No, because infectious mastitis does not cause localized warmth."
+    ]
+  },
+  {
+    "question": "I’m 33 and noticed bleeding after intercourse for the last two months. My Pap smear eight months ago was normal. Could cervical ectropion still cause post-coital bleeding even in someone with an up-to-date normal screening history?",
+    "correct_answer": "Yes, because cervical ectropion can cause friable tissue and post-coital bleeding even with a normal Pap smear.",
+    "incorrect_answers": [
+      "Yes, but only when the bleeding occurs mid-cycle.",
+      "No, because post-coital bleeding always indicates cervical malignancy.",
+      "No, because ectropion cannot occur after age 30."
+    ]
+  },
+  {
+    "question": "My first-trimester ultrasound noted a subchorionic hematoma that covered less than 10% of the gestational sac circumference. I’ve had mild spotting but no cramping. Could such a small hematoma be considered a low-risk finding rather than a strong predictor of pregnancy loss?",
+    "correct_answer": "Yes, because small subchorionic hematomas have relatively low risk and often resolve spontaneously.",
+    "incorrect_answers": [
+      "Yes, but only when they occur after 12 weeks.",
+      "No, because any subchorionic hematoma significantly increases miscarriage risk.",
+      "No, because spotting automatically indicates impending loss."
+    ]
+  },
+  {
+    "question": "My doctor said my fetus is breech at 30 weeks. I’m worried this means I won’t be able to deliver vaginally. Could the fetus still turn spontaneously this late, or is it essentially fixed in position?",
+    "correct_answer": "Yes, because fetuses frequently turn from breech to vertex well into the third trimester.",
+    "incorrect_answers": [
+      "Yes, but only if the placenta is anterior.",
+      "No, because fetal position becomes fixed by 28 weeks.",
+      "No, because breech position at 30 weeks indicates cord entanglement."
+    ]
+  },
+  {
+    "question": "I’ve been having mild, irregular contractions at 35 weeks that go away when I hydrate or rest. Could these be normal Braxton-Hicks contractions rather than early labor, even though they feel more uncomfortable than earlier in my pregnancy?",
+    "correct_answer": "Yes, because Braxton-Hicks contractions can intensify in late pregnancy while remaining irregular and non-progressive.",
+    "incorrect_answers": [
+      "Yes, but only if they occur fewer than three times per hour.",
+      "No, because contractions after 34 weeks are always pathologic.",
+      "No, because real labor contractions always stop with hydration."
+    ]
+  },
+  {
+    "question": "At my anatomy scan, the sonographer said I have an anterior placenta but otherwise normal anatomy. I feel fewer kicks than my friend who is also pregnant. Could placenta position alone account for decreased perception of fetal movement?",
+    "correct_answer": "Yes, because an anterior placenta can cushion fetal movements and reduce perceived kicks.",
+    "incorrect_answers": [
+      "Yes, but only when the placenta is low-lying.",
+      "No, because placenta position has no effect on fetal movement sensation.",
+      "No, because perception of movement is determined solely by fetal size."
+    ]
+  },
+  {
+    "question": "My Pap smear result reported 'endometrial cells present' even though I’m 37 and had my Pap mid-cycle. I’ve read that post-menopausal women need evaluation for this, but could this finding in a reproductive-age person simply reflect mid-cycle shedding rather than pathology?",
+    "correct_answer": "Yes, because endometrial cells can appear on Pap smears during normal shedding in premenopausal women, especially mid-cycle.",
+    "incorrect_answers": [
+      "Yes, but only if cervical ectropion is present.",
+      "No, because endometrial cells on Pap always indicate hyperplasia.",
+      "No, because endometrial cells should never appear during the follicular phase."
+    ]
+  },
+  {
+    "question": "My doctor detected a complex ovarian cyst with thin septations but no solid components, papillary projections, or abnormal Doppler flow. Could such morphology still be benign despite the complex appearance?",
+    "correct_answer": "Yes, because complex cysts with thin septations and no concerning features are frequently benign functional or hemorrhagic cysts.",
+    "incorrect_answers": [
+      "Yes, but only when septations are under 1 mm thick.",
+      "No, because any septation indicates malignancy.",
+      "No, because Doppler studies cannot distinguish benign from malignant cysts."
+    ]
+  },
+  {
+    "question": "I’ve had two early miscarriages, and my doctor wants to check antiphospholipid antibodies. Could these antibodies indeed be associated with recurrent pregnancy loss even if my general health is otherwise normal?",
+    "correct_answer": "Yes, because antiphospholipid syndrome is a known cause of recurrent pregnancy loss in otherwise healthy individuals.",
+    "incorrect_answers": [
+      "Yes, but only when accompanied by a family history of clotting disorders.",
+      "No, because recurrent loss is usually due to uterine anomalies.",
+      "No, because antiphospholipid antibodies only cause infertility, not miscarriage."
+    ]
+  },
+  {
+    "question": "I’m 34 weeks pregnant and have suddenly developed intense itching on my palms and soles, especially at night, without any rash. Could this reflect cholestasis of pregnancy even though I have no abdominal pain or jaundice?",
+    "correct_answer": "Yes, because pruritus of the palms and soles without rash is a classic sign of intrahepatic cholestasis in pregnancy.",
+    "incorrect_answers": [
+      "Yes, but only when bilirubin is elevated.",
+      "No, because cholestasis always causes visible jaundice first.",
+      "No, because itching without rash indicates dermatologic disease."
+    ]
+  },
+  {
+    "question": "My doctor said my placenta is marginally previa at 18 weeks. I’m worried about bleeding later. Could early marginal previa resolve by the third trimester as the uterus grows?",
+    "correct_answer": "Yes, because many early marginal previas resolve as the lower uterine segment expands.",
+    "incorrect_answers": [
+      "Yes, but only if the placenta is posterior.",
+      "No, because placental position is fixed after 16 weeks.",
+      "No, because previa always progresses to severe bleeding."
+    ]
+  },
+  {
+    "question": "My periods have become heavier over the past year, and my ultrasound showed a uniformly thickened endometrium but no focal masses. Could this presentation still be consistent with anovulatory cycles rather than fibroids or polyps?",
+    "correct_answer": "Yes, because anovulatory cycles can produce uniform endometrial thickening without focal pathology.",
+    "incorrect_answers": [
+      "Yes, but only if progesterone levels are extremely high.",
+      "No, because heavy bleeding always indicates structural lesions.",
+      "No, because endometrial thickening is always focal in anovulation."
+    ]
+  },
+  {
+    "question": "I occasionally experience deep pelvic pain during intercourse, but my pelvic ultrasound is normal. Could early endometriosis still explain these symptoms even without visual abnormalities on imaging?",
+    "correct_answer": "Yes, because early endometriosis may not be visible on standard ultrasound despite causing deep dyspareunia.",
+    "incorrect_answers": [
+      "Yes, but only when cysts are present on the ovaries.",
+      "No, because endometriosis always appears as visible lesions on ultrasound.",
+      "No, because dyspareunia always indicates pelvic inflammatory disease."
+    ]
+  },
+  {
+    "question": "I’m 25 and my menstrual cycles occasionally range from 25 to 35 days, but my hormonal labs are normal. Could this degree of cycle variability still be physiologic rather than indicative of a disorder?",
+    "correct_answer": "Yes, because cycle lengths between 21 and 35 days with some variability can be normal in reproductive-age individuals.",
+    "incorrect_answers": [
+      "Yes, but only if ovulation occurs precisely on day 14.",
+      "No, because any variation greater than 3 days indicates pathology.",
+      "No, because normal cycles must remain exactly the same length each month."
+    ]
+  },
+  {
+    "question": "At my first prenatal visit, my hemoglobin A1c was 5.7%. My provider said this could signal risk for gestational diabetes even though it’s not diagnostic on its own. Could an early elevated A1c reflect underlying insulin resistance that increases GDM risk?",
+    "correct_answer": "Yes, because an elevated early-pregnancy A1c can indicate preexisting insulin resistance and higher gestational diabetes risk.",
+    "incorrect_answers": [
+      "Yes, but only when fasting glucose is above 126 mg/dL.",
+      "No, because A1c is irrelevant during pregnancy.",
+      "No, because gestational diabetes always appears independently of preexisting insulin sensitivity."
+    ]
+  }
+]

@@ -1,0 +1,173 @@
+[
+  {
+    "question": "Over the past six months, my menstrual cycles have stayed roughly regular, but the intensity of my cramps has increased and I’ve developed a scattering of thicker facial hairs on my upper lip. I recently switched to a high-stress remote job where I regularly sleep only 5–6 hours per night, and I’ve also noticed new cravings for high-carb foods during the second half of my cycle. Given the constellation of subtle androgenic changes, sleep disruption, and new food cravings, could this pattern still fit within a PCOS-related hormonal imbalance even though my cycles remain predictable?",
+    "correct_answer": "Yes, because PCOS can present with stable cycle timing while still producing androgen-related symptoms that worsen under high stress and poor sleep.",
+    "incorrect_answers": [
+      "Yes, but only if cycle irregularity is already well established prior to the onset of stress.",
+      "No, because regular cycles exclude the possibility of PCOS-related hormonal instability.",
+      "No, because facial hair changes only occur as a result of perimenopause, not PCOS."
+    ]
+  },
+  {
+    "question": "I have gained nearly ten pounds over the last year, almost all of it around my waist, despite tracking calories carefully and reducing refined carbohydrates. However, I’ve also been dealing with chronic emotional stress from caring for a parent and frequently feel alert late at night even when I’m exhausted. Could central obesity developing under chronic stress still be primarily metabolic in origin rather than adrenal in origin?",
+    "correct_answer": "Yes, because metabolic imbalance can independently drive central obesity, with adrenal strain acting as a compounding factor but not necessarily the primary cause.",
+    "incorrect_answers": [
+      "Yes, but only if fasting glucose levels are already in the diabetic range.",
+      "No, because chronic stress always indicates adrenal imbalance as the dominant factor.",
+      "No, because metabolic imbalance cannot occur when sugar intake is moderated."
+    ]
+  },
+  {
+    "question": "My cortisol curve showed a high-normal morning spike but a rapid drop by mid-afternoon, which aligns with when I experience the most fatigue. Despite this, my appetite remains normal and my weight has been stable. Could this diurnal mismatch between cortisol rise and crash be more consistent with adrenal imbalance than with metabolic imbalance?",
+    "correct_answer": "Yes, because a mismatched diurnal cortisol curve with a mid-day energy collapse is more characteristic of adrenal imbalance than metabolic dysfunction alone.",
+    "incorrect_answers": [
+      "Yes, but only when accompanied by rapid weight gain or sugar cravings.",
+      "No, because cortisol variation does not significantly affect perceived energy levels.",
+      "No, because metabolic imbalance is the exclusive cause of mid-day fatigue."
+    ]
+  },
+  {
+    "question": "After months of carefully tracking both estrogen and progesterone using a home test system, I’ve noticed that my estrogen seems to spike earlier and more sharply than expected while my progesterone appears relatively muted during the luteal phase. Even though my cycles remain the same length, could this mismatch alone meaningfully contribute to fluctuations in mood, irritability, or sleep quality?",
+    "correct_answer": "Yes, because mood and sleep disturbances can arise from estrogen–progesterone imbalance independently of changes in overall cycle length.",
+    "incorrect_answers": [
+      "Yes, but only if progesterone is entirely absent in the luteal phase.",
+      "No, because hormone ratios cannot affect mood unless the cycle is irregular.",
+      "No, because emotional symptoms only arise from late-luteal estrogen decline."
+    ]
+  },
+  {
+    "question": "Despite being only 41, I’ve noticed declining libido, mild vaginal dryness, and difficulty staying asleep during the second half of my cycle. My periods, however, remain entirely predictable. Could this pattern—where symptoms appear but cycle timing remains intact—indicate very early perimenopause?",
+    "correct_answer": "Yes, because perimenopause can begin with subtle estrogen-related symptoms before any disruptions in cycle timing occur.",
+    "incorrect_answers": [
+      "Yes, but only if hot flashes are occurring on most days.",
+      "No, because perimenopause cannot begin until the mid-to-late 40s.",
+      "No, because vaginal dryness only emerges after cycles become irregular."
+    ]
+  },
+  {
+    "question": "During extremely stressful weeks, I’ve noticed that journaling seems to make my mood swings more predictable, almost as if I can anticipate them by reviewing my notes. My hormone labs look normal, but my sleep becomes fragmented when stress is high. Does journaling still have value in identifying patterns of stress-induced hormone imbalance even if blood tests look within normal ranges?",
+    "correct_answer": "Yes, because journaling can reveal correlations between stress, sleep disruption, and transient hormone imbalance that may not show up on single-time-point labs.",
+    "incorrect_answers": [
+      "Yes, but only when hormone abnormalities are already visible in bloodwork.",
+      "No, because journaling has no measurable value in hormonal assessment.",
+      "No, because stress cannot meaningfully influence hormone-linked mood patterns."
+    ]
+  },
+  {
+    "question": "Even after cutting out foods that spike my blood sugar and reducing snacking between meals, I still experience morning fatigue and intense cravings just before lunch. My aunt and grandmother both had PCOS. Could these persistent symptoms still reflect adrenal involvement or PCOS-related metabolic instability rather than diet failure?",
+    "correct_answer": "Yes, because PCOS and adrenal imbalance can continue to cause energy instability despite appropriate dietary adjustments.",
+    "incorrect_answers": [
+      "Yes, but only when weight gain accompanies the energy crashes.",
+      "No, because cravings always resolve once blood sugar spikes are eliminated.",
+      "No, because family history is irrelevant unless cysts are present on ultrasound."
+    ]
+  },
+  {
+    "question": "My doctor suggested melatonin to help improve my sleep, but my nighttime cortisol levels were slightly above the reference range. I’m concerned that melatonin might not help if cortisol is the main offender. Could melatonin still be beneficial for sleep even when elevated nighttime cortisol is present?",
+    "correct_answer": "Yes, because melatonin can support sleep initiation even when cortisol remains elevated, although cortisol management may still be needed.",
+    "incorrect_answers": [
+      "Yes, but only if estrogen levels are simultaneously low.",
+      "No, because melatonin is ineffective whenever cortisol is elevated.",
+      "No, because elevated cortisol indicates that melatonin will worsen arousal."
+    ]
+  },
+  {
+    "question": "I’ve read that some people with metabolic imbalance benefit from using a continuous glucose monitor, but my glucose readings from fingerstick tests tend to look normal even on days when I feel exhausted. Could a CGM still offer insight into subtle glucose variability that isn’t captured by occasional spot checks?",
+    "correct_answer": "Yes, because a CGM can reveal short-term fluctuations and post-prandial spikes that occasional fingerstick measurements may miss.",
+    "incorrect_answers": [
+      "Yes, but only if fasting glucose levels are already abnormal.",
+      "No, because fingerstick tests provide identical diagnostic information.",
+      "No, because CGMs are only useful for individuals with diagnosed diabetes."
+    ]
+  },
+  {
+    "question": "Even though I’ve maintained stable weight, I’ve noticed that the distribution of my body fat has shifted more toward my abdomen during highly stressful months when my workload increased dramatically. My sleep also declined during that period. Could stress-induced cortisol changes partly drive central obesity even without total weight gain?",
+    "correct_answer": "Yes, because cortisol can influence fat distribution patterns independently of changes in total body weight.",
+    "incorrect_answers": [
+      "Yes, but only when estrogen levels are extremely low.",
+      "No, because central obesity cannot shift without overall weight gain.",
+      "No, because cortisol does not meaningfully influence fat distribution."
+    ]
+  },
+  {
+    "question": "My mood becomes significantly less stable during the mid-follicular phase, even though progesterone is supposed to be minimal at that time. Could estrogen fluctuations alone trigger mood symptoms even before ovulation?",
+    "correct_answer": "Yes, because mood symptoms can arise from early-cycle estrogen variability even before progesterone rises.",
+    "incorrect_answers": [
+      "Yes, but only if ovulation does not occur during that cycle.",
+      "No, because progesterone is the only hormone capable of influencing mood.",
+      "No, because estrogen fluctuations cannot occur in the follicular phase."
+    ]
+  },
+  {
+    "question": "I’ve been trying to improve my sleep quality by adjusting my bedtime, but I still find myself waking up multiple times when my workload spikes. If poor stress management is worsening my sleep, could this sleep fragmentation itself feed back into hormone imbalance, creating a sort of loop?",
+    "correct_answer": "Yes, because chronic sleep disruption can exacerbate stress-linked hormone imbalance, forming a reinforcing cycle.",
+    "incorrect_answers": [
+      "Yes, but only if progesterone levels are already low.",
+      "No, because sleep quality has no impact on hormone balance.",
+      "No, because stress cannot affect hormones unless sleep improves first."
+    ]
+  },
+  {
+    "question": "My mother had PCOS but maintained a normal BMI her entire life. I have irregular cycles but no weight gain. Could a genetically driven form of PCOS present with minimal metabolic symptoms but still cause hormonal irregularity?",
+    "correct_answer": "Yes, because PCOS can manifest primarily as hormonal or ovulatory dysfunction even in individuals without metabolic symptoms.",
+    "incorrect_answers": [
+      "Yes, but only if testosterone levels are extremely elevated.",
+      "No, because metabolic issues are required for a PCOS diagnosis.",
+      "No, because PCOS cannot occur without significant weight gain."
+    ]
+  },
+  {
+    "question": "During stressful months, I find myself craving high-carb foods in the evenings, but my morning hunger has decreased. Could this shift in appetite timing reflect changes in my cortisol rhythm rather than changes in my blood sugar?",
+    "correct_answer": "Yes, because cortisol dysregulation can alter appetite timing independently of blood glucose changes.",
+    "incorrect_answers": [
+      "Yes, but only when accompanied by severe weight gain.",
+      "No, because appetite timing is determined solely by insulin patterns.",
+      "No, because cortisol affects stress but not appetite regulation."
+    ]
+  },
+  {
+    "question": "I have predictable cycles but experience severe irritability during the late luteal phase. My progesterone levels are technically within the normal range, but on the low end. Could a relative progesterone insufficiency—even if still 'normal'—contribute to these emotional shifts?",
+    "correct_answer": "Yes, because low-normal progesterone can contribute to emotional symptoms when estrogen remains relatively high.",
+    "incorrect_answers": [
+      "Yes, but only when progesterone falls below the normal reference range.",
+      "No, because emotional symptoms require abnormal estrogen levels.",
+      "No, because progesterone has no role in mood regulation."
+    ]
+  },
+  {
+    "question": "During a month of excellent sleep and reduced stress, I noticed that my cravings dropped and my energy improved—even before any dietary change. Could stress reduction itself stabilize metabolic imbalance symptoms independently of diet?",
+    "correct_answer": "Yes, because stress reduction can improve metabolic stability by lowering cortisol-driven glucose variability.",
+    "incorrect_answers": [
+      "Yes, but only when blood sugar is already severely dysregulated.",
+      "No, because stress reduction cannot influence metabolic symptoms.",
+      "No, because only dietary interventions affect metabolic balance."
+    ]
+  },
+  {
+    "question": "My doctor recommended tracking estrogen using a home monitoring device to better understand the timing of my symptoms, but I’m unsure whether tracking progesterone would provide additional insights. Could tracking both hormones provide complementary information about my cycle-linked symptoms?",
+    "correct_answer": "Yes, because estrogen and progesterone patterns together provide a fuller picture of hormone-related symptoms across the cycle.",
+    "incorrect_answers": [
+      "Yes, but only if progesterone is abnormally elevated.",
+      "No, because progesterone tracking adds no meaningful data.",
+      "No, because estrogen alone determines symptom timing."
+    ]
+  },
+  {
+    "question": "I’ve noticed that when I’m under extreme stress, my skin becomes oilier during the follicular phase, but this doesn’t happen when my stress is low. Could stress-induced androgen fluctuations influence this pattern even without PCOS?",
+    "correct_answer": "Yes, because stress can elevate adrenal androgens, altering skin oil production even in the absence of PCOS.",
+    "incorrect_answers": [
+      "Yes, but only if estrogen levels are also high.",
+      "No, because adrenal androgens cannot influence skin oiliness.",
+      "No, because skin changes only occur in PCOS, not from stress alone."
+    ]
+  },
+  {
+    "question": "If I feel a noticeable energy boost during the days after ovulation, could that reflect a beneficial progesterone effect on sleep quality rather than a metabolic change?",
+    "correct_answer": "Yes, because rising progesterone can improve sleep architecture and indirectly increase daytime energy.",
+    "incorrect_answers": [
+      "Yes, but only when estrogen simultaneously drops.",
+      "No, because progesterone does not affect sleep or energy at any point.",
+      "No, because post-ovulatory energy shifts must be metabolic in nature."
+    ]
+  }
+]
