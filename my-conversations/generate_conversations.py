@@ -234,10 +234,15 @@ def parse_conversation_response(text: str) -> List[Dict[str, str]]:
     stripped = text.strip()
     if stripped.startswith("```"):
         # Attempt to extract fenced JSON
-        start = stripped.find("{")
-        end = stripped.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            stripped = stripped[start : end + 1].strip()
+        start_brace = stripped.find("{")
+        end_brace = stripped.rfind("}")
+        start_bracket = stripped.find("[")
+        end_bracket = stripped.rfind("]")
+
+        if start_brace != -1 and end_brace != -1 and end_brace > start_brace:
+            stripped = stripped[start_brace : end_brace + 1].strip()
+        elif start_bracket != -1 and end_bracket != -1 and end_bracket > start_bracket:
+            stripped = stripped[start_bracket : end_bracket + 1].strip()
 
     try:
         data = json.loads(stripped)
@@ -253,8 +258,7 @@ def parse_conversation_response(text: str) -> List[Dict[str, str]]:
             if messages:
                 return messages
     except json.JSONDecodeError:
-        raise ValueError("Failed to parse LLM response as JSON. Response was:\n" + text)
-        x
+        logger.warning("Failed to parse LLM response as JSON. Response was:\n%s", text)
     return [{"role": "assistant", "text": text}]
 
 
@@ -267,11 +271,10 @@ def process_file(
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info("Opening input file: %s", input_path)
 
-    processed_counter = 0  # counts only non-empty message arrays
+    processed_counter = 0  # counts non-empty processed records seen (including skipped by start)
+    output_counter = 0  # counts conversations actually generated
     with input_path.open("r", encoding="utf-8") as f:
         for line_no, line in enumerate(f, start=1):
-            if limit is not None and len(results) >= limit:
-                break
             line = line.strip()
             if not line:
                 continue
@@ -295,13 +298,16 @@ def process_file(
             conversation = parse_conversation_response(llm_text)
 
             processed_counter += 1
+            if limit is not None and output_counter >= limit:
+                break
             record = {
                 "input": payload,
                 "conversation": conversation,
             }
             out_path = output_dir / f"conversation_{processed_counter:04d}.json"
             out_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-            logger.info("Wrote conversation %d to %s", processed_counter, out_path)
+            output_counter += 1
+            logger.info("Wrote conversation %d to %s", output_counter, out_path)
 
 
 def main() -> None:
